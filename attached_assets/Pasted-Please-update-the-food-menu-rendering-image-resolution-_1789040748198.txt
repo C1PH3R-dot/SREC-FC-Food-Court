@@ -1,0 +1,23 @@
+Please update the food menu rendering, image resolution logic, and item display order in the SREC FC Food Court application according to the following strict requirements:
+
+### 1. 🖼️ LOCAL IMAGE FILE DYNAMIC MAPPING
+- Replace all current Unsplash/external food image URLs with the local image assets uploaded directly to the project root or `/public/images/` / `/assets/images/` directory.
+- Dynamic Matching Logic:
+  * Create a helper function `getFoodImage(itemName: string)` that normalizes the item's name to match uploaded image filenames.
+  * For example, for item name "Veg Noodles", check for uploaded local files like `/assets/images/VEG NOODLES.png`, `veg_noodles.png`, or `veg-noodles.png` (case-insensitive, ignoring spaces/underscores).
+  * If a direct matching local image file exists for an item name, use that local file path as the `<img src={...} />`.
+  * STRICT FALLBACK REQUIREMENT: Eliminate repetitive generic fallback images (e.g., repeating samosa/pastry pictures across unrelated items like chats, juices, or rice). If an exact image file is missing, construct a unique color-gradient card background with an item-specific emoji/icon instead of duplicating an existing food picture.
+
+### 2. 🔀 MENU ITEM ORDER & RANDOMIZATION (DEFAULT VIEW)
+- Currently, menu items appear strictly grouped by category (all Puffs together, all Noodles together, all Juices together), making the feed look artificial or repetitive.
+- In the "All" category view:
+  * Implement a deterministic shuffle algorithm (or seeded layout array) so that the menu items present a diverse mix of categories on the main feed (e.g., a Puff followed by a Juice, then a Biriyani, then a Chat).
+  * Maintain the category filtering logic: when a user clicks a specific category pill (e.g., "Puffs & Bakery" or "Fresh Juice & Mojito"), filter strictly to show only items belonging to that selected category.
+
+### 3. 📱 CARD LAYOUT & IMAGE CONTAINER FIXES
+- Card Image Style:
+  * Set food item image containers to a fixed aspect ratio (e.g., `aspect-video` or `h-36 w-full`).
+  * Ensure CSS properties use `object-cover object-center` so images fit nicely without stretching or distortion.
+  * Add a subtle dark gradient overlay on top of the image for the "IN STOCK" / "SOLD OUT" badge readability.
+
+Ensure all image path fallbacks handle case variations seamlessly and verify TypeScript build checks pass without broken image link errors.
