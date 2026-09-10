@@ -1,0 +1,68 @@
+Build a production-ready, mobile-first Web Application for "SREC FC (Sri Ramakrishna Engineering College Food Court)".
+
+### 🎨 DESIGN SYSTEM & BRAND THEME
+- Color Palette: Primary Deep Forest Green (#1B4332), Background Cream (#FDFBF7), Glassmorphic Cards (`bg-white/80 backdrop-blur-md border border-white/20 shadow-sm`), Accent Emerald (#2D6A4F).
+- Typography: Clean sans-serif for UI, Monospace/Courier font strictly for the Thermal Receipt.
+
+### 📱 SCREEN-BY-SCREEN ARCHITECTURE
+
+1. AUTHENTICATION / ONBOARDING SCREEN:
+   - Full-bleed background image with a dark translucent glassmorphic overlay.
+   - Branding: SREC FC logo placeholder, Title: "SREC Food Court", Subtitle: "Pre-Order & Fast Campus Pickup".
+   - Input forms for Email/Password with dynamic toggle to "Sign Up" / "Log In".
+   - "Continue as Student" direct entry button.
+
+2. HOME SCREEN & DYNAMIC MENU:
+   - Top Header: Local asset logo (`/assets/srec-logo.png`), Title: "Sri Ramakrishna Engineering College - Main FC", Profile Avatar icon.
+   - Live Status Badge: "Live Stock Feed Active".
+   - Search & Filter System:
+     * Search Input: Instant case-insensitive filtering by food item name.
+     * Horizontal Category Scroll Pills: "All", "Puffs & Bakery", "Breakfast", "Lunch", "Indochines", "Chats", "Snacks", "Hot Drinks", "Milkshakes", "Fresh Juice".
+     * Empty Search State: If search yields 0 items, render a glassmorphic card with a search-x icon, text "No Food Items Found", subtext "Try searching for Coffee, Biriyani, or Puffs", and a "Reset Filters" button.
+   - Dynamic Food Cards:
+     * Displays Food Name, Price in ₹ (INR), Category tag.
+     * Dynamic Stock Badge: Green "IN STOCK" (Enables "+ ADD" button) vs Red "SOLD OUT" (Grays out card, disables button).
+   - Bottom Floating Navigation Bar: Home, Orders, Cart (with dynamic item count badge), Profile.
+
+3. CART & CHECKOUT SLIDE-OVER:
+   - Slide-up or dedicated page showing selected items with quantity controls (+ / -).
+   - Detailed Bill Breakdown: Subtotal, 5% GST, Grand Total.
+   - "Proceed to Pay" CTA button.
+
+4. MOCK UPI PAYMENT & DIGITAL THERMAL RECEIPT (STRICT RECIEPT DESIGN):
+   - Payment Selector: Simulated Google Pay, PhonePe, and Paytm UPI modal.
+   - Processing timer (1.5s), routing to the Digital Thermal Receipt screen.
+   - Receipt UI Specifications:
+     * Stylized thermal paper container with jagged/dashed paper edges.
+     * Header Logo & Text: "SREC FC - FOOD COURT", "GOOD FOOD • GREAT VIBES".
+     * Metadata Table: College (SREC), Location (Food Court), Date, Time, Receipt No (Unique format: `FC` + Timestamp/Random ID e.g., `FC2509060042`), Payment Mode (UPI), Transaction ID.
+     * Itemized Order Table: Column headers (No., ITEM, QTY, PRICE (₹)) with items purchased.
+     * Sub Total, GST (5%), Grand Total.
+     * Footer: "Thank you for dining with us! SREC FC - EAT • RELAX • REPEAT".
+     * Dynamic Barcode Engine: Render a 1D barcode encoding the exact unique Receipt Number.
+     * Status Badge: Green tag showing "STATUS: PAID & VERIFIED".
+
+5. PROFILE, HISTORY & EDIT USER DETAILS:
+   - Profile card displaying User Name, Student Roll Number, and Avatar.
+   - Edit Profile Modal: Update Name, Phone Number, and Roll Number with localStorage persistence.
+   - Recent Purchase History List: Shows past order cards. Clicking any past order opens its unique generated barcode receipt.
+   - Toggle Setting: "Enable Daily Lunch Reminders (12:00 PM)".
+   - Logout button returning to Auth Screen.
+
+6. ADMIN LIVE FEED TOGGLE (FOR DEMO PRESENTATION):
+   - In Settings/Profile, include a switch titled "Admin Stock Management Mode".
+   - When active, clicking on any food card on the main menu toggles its state instantly between "IN STOCK" and "SOLD OUT" to demonstrate live data feeds to judges.
+
+### 🍱 PRELOADED MOCK DATA MATRIX
+Populate the menu database with these exact items and prices:
+- Puffs & Bakery: Veg Puff (₹15), Egg Puff (₹20), Mushroom Puff (₹30), Chicken Puff (₹30), Coconut Bun (₹15), Honey Cake (₹30), Apple Cake (₹20), Tea Cake (₹20), Choco Lava (₹50).
+- Breakfast: Pongal (₹30), Poori (₹30), Idly (₹30), Dosa (₹30), Roast (₹30).
+- Lunch: Parotta (₹30), Chappathi (₹30), Variety Rice (₹30), Meals (₹60), Kothu Parotta (₹50).
+- Indochines: Veg Noodles (₹50), Egg Noodles (₹60), Chicken Noodles (₹70), Veg Rice (₹50), Egg Rice (₹60), Chicken Rice (₹70), Chicken Biriyani (₹70), Egg Biriyani (₹55).
+- Chats: Bhel Poori (₹25), Masala Poori (₹25), Mushroom Chat (₹25), Pani Poori (₹25), Thattu Vada Set (₹30).
+- Snacks: Vada (₹14), Bajji (₹14), Bonda (₹14).
+- Hot Drinks: Tea (₹10), Coffee (₹15), Lemon Tea (₹12), Milk (₹15), Boost/Horlicks (₹18).
+- Milkshakes: Vanilla (₹60), Oreo (₹65), Banana (₹60), Strawberry (₹60), Red Velvet (₹80), Brownie (₹80).
+- Fresh Juice & Mojito: Pomegranate (₹50), Apple (₹50), Mosambi (₹35), Pineapple (₹40), Orange (₹40), Grapes (₹35), Muskmelon (₹40), Watermelon (₹25), Banana (₹25), Pappaya (₹25), Lemon (₹15), Lime Mojito (₹50), Blue Monday (₹50).
+
+Ensure full state persistence, responsive mobile viewport layout, and smooth interactions.

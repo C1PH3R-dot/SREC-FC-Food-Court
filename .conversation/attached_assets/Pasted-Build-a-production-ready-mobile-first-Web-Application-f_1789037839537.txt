@@ -1,0 +1,55 @@
+Build a production-ready, mobile-first Web Application for "SREC FC (Sri Ramakrishna Engineering College Food Court)" using React, Tailwind CSS, Lucide Icons, and JSBarcode/QRCode libraries.
+
+### 🎨 DESIGN SYSTEM & THEME
+- Palette: Primary Deep Forest Green (#1B4332), Cream Background (#FDFBF7), Glassmorphic White Cards (`bg-white/80 backdrop-blur-md border border-white/20`).
+- Typography: Clean sans-serif for UI, Monospace/Courier font strictly for the Thermal Receipt screen.
+
+### 📱 SCREEN STRUCTURE & NAVIGATION
+
+1. AUTH / ONBOARDING SCREEN:
+   - Full-screen high-quality food background image with a dark glassmorphic overlay.
+   - Text: "SREC FC - Pre-Order & Fast Pickup".
+   - "Sign Up / Log In" buttons (Email/Password & One-Tap Google/Apple login simulation).
+   - "Continue as Guest / Student" button that bypasses straight to Home.
+
+2. HOME SCREEN & DYNAMIC MENU:
+   - Top Bar: SREC FC Crest Logo (`/assets/srec-logo.png`), Location indicator ("SREC Main FC"), Profile Avatar.
+   - Live Availability Banner: "Live Stock Sync Active - FC Operational".
+   - Search & Filter bar for food items.
+   - Horizontal Category Selector: "All", "Abakari Bakery", "Snacks & Quick Bites", "Hot Beverages", "Lunch Bowls".
+   - Food Item Cards:
+     - Includes Food Image, Name, Price in ₹ (INR), and dynamic stock badge:
+       * Green "IN STOCK" badge -> Active "+ ADD" button.
+       * Red "SOLD OUT" badge -> Grayscale card with disabled "Out of Stock" button.
+   - Persistent Bottom Navigation Bar: Home, Orders, Cart (with live item badge), Profile/Settings.
+
+3. CART & CHECKOUT PAGE:
+   - Itemized list of selected dishes with dynamic quantity adjusters (+ / -).
+   - Cost Breakdown: Subtotal, Taxes (5% GST), Total Amount.
+   - "Proceed to Payment" CTA button.
+
+4. SIMULATED PAYMENT & RECEIPT GENERATION (STRICT COMPLIANCE TO RECIEPT.png):
+   - Payment Modal supporting UPI apps (Google Pay, PhonePe, Paytm).
+   - Upon clicking "Pay Now", simulate a 1.5-second processing screen, then route to the Digital Thermal Receipt screen.
+   - Thermal Receipt Layout:
+     * Stylized paper receipt background with dashed border edges.
+     * Header: SREC FC Badge Logo, "SREC FC - FOOD COURT", "GOOD FOOD • GREAT VIBES".
+     * Details Grid: College (SREC), Location (Food Court), Date, Time, Receipt No (Unique generated ID like `FC2509060042`), Payment Mode (UPI), Transaction ID.
+     * Itemized Table: No., ITEM, QTY, PRICE (₹).
+     * Totals: Sub Total, GST (5%), Grand Total.
+     * Footer Message: "Thank you for dining with us! SREC FC - EAT • RELAX • REPEAT".
+     * Live Barcode Generator: Render a high-contrast 1D Barcode (using `jsbarcode` or standard canvas) that encodes the unique Receipt Number.
+     * Verification Status Badge: Green tag showing "STATUS: PAID & VERIFIED".
+
+5. PROFILE & EDIT USER DETAILS:
+   - User Profile Card with Avatar image.
+   - Edit Profile Modal: Ability to update Profile Photo, Student Name, Roll Number, and Phone Number.
+   - Recent Purchase History List (Clicking any past order re-opens its generated barcode receipt).
+   - Notification Settings Toggle: "Enable Daily Lunch Reminders (12:00 PM)".
+   - Logout button that clears state and redirects back to Auth screen.
+
+6. ADMIN LIVE FEED TOGGLE (FOR PRESENTATION DEMO):
+   - In Settings/Profile, add a switch called "Admin Stock Management Mode".
+   - When enabled, clicking any item in the main menu toggles its status instantly between "IN STOCK" and "SOLD OUT" to demonstrate live inventory updates to the judges.
+
+Ensure state management keeps cart items, total prices, user profile edits, and order receipts persistent across tab reloads.
