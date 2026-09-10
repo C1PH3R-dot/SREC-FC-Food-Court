@@ -1,0 +1,40 @@
+Please refactor and update the existing "SREC FC Food Court" application to resolve the following specific issues and feature updates. Retain the working components while strictly updating these sections:
+
+### 1. 🥘 FOOD ITEM IMAGES (ACCURATE MAPPING)
+- Remove all default/fallback generic shopping bag icons (`/assets/bag.png` or Lucide icons).
+- Map every item in the dataset to an accurate, high-quality, delicious food photo using Unsplash image URLs or localized high-res assets matching the item's name (e.g., Unsplash photos specifically for Veg Puff, Egg Puff, Dosa, Biriyani, Coffee, Lime Mojito, Choco Lava, etc.).
+- Food cards must display image headers with `object-fit: cover`, rounded top corners, and smooth loading placeholders.
+
+### 2. 🔐 REFACTORED AUTHENTICATION & LOGIN FLOW
+- Remove the "Student Entry" direct guest login tab completely from the Onboarding Screen.
+- Screen Background: Add a subtle, semi-transparent food background image (e.g., dark, moody food photography) seamlessly merged with the deep forest green theme using an overlay (`bg-cover bg-center blend-overlay opacity-30`).
+- Sign-Up Flow:
+  - Required Fields: Username, Email (Gmail), and Password.
+  - Store user credentials persistently in LocalStorage/Database.
+  - Validation: If an account with the entered Email already exists, show an inline alert: "Account already exists with this Email. Please Sign In."
+- Sign-In Flow:
+  - Required Fields: Email and Password only.
+  - Validation: If Email or Password does not match recorded accounts, show an explicit error message: "Invalid email or password. Please try again."
+- Forgot Password Flow:
+  - Add a "Forgot Password?" link below the Sign-In form.
+  - Step 1: User enters registered Email address.
+  - Step 2: System sends a simulated 4-digit OTP modal.
+  - Step 3: User inputs OTP. If verified, transition to "Set New Password" form and update user database entry.
+
+### 3. 💳 UPI PAYMENT SELECTION (BRANDED APPS)
+- Replace plain placeholder initials ('G', 'P', 'T') with official, high-resolution SVG or PNG logos for payment options:
+  - Google Pay Logo
+  - PhonePe Logo
+  - Paytm Logo
+- Display clean white rounded options with horizontal alignment: `[ App Logo ] [ App Name ] [ Selection Radio/Checkmark ]`.
+
+### 4. 🪟 GLASSMORPHISM BOTTOM NAVIGATION BAR
+- Replace the solid white footer nav with a modern glassmorphic floating dock pinned to the bottom of the viewport.
+- CSS Styling: `bg-white/70 backdrop-blur-md border-t border-white/30 shadow-lg text-emerald-950`.
+- Maintain interactive states: Active tab gets a deep green badge highlight and icon tinting.
+
+### 5. ⚙️ ADMIN CONTROLS REMOVAL
+- Remove the "Admin Stock Management Mode" toggle switch completely from the user Profile screen.
+- Profile screen should only retain: User Avatar, Name, Email, Order History link, Daily Lunch Reminder toggle, and Sign Out button.
+
+Ensure all TypeScript types match, state transitions remain smooth, and existing order receipt generation features remain intact.
