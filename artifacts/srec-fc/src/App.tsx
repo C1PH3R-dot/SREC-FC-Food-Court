@@ -162,6 +162,27 @@ function getFoodImage(itemName: string) {
   return match ? `/images/${match.fileName}` : undefined;
 }
 
+const beverageImages = [
+  { names: ['Pomegranate'], url: 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?auto=format&fit=crop&w=720&q=85' },
+  { names: ['Apple'], url: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=720&q=85' },
+  { names: ['Mosambi', 'Sweet Lime'], url: 'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?auto=format&fit=crop&w=720&q=85' },
+  { names: ['Pineapple'], url: 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?auto=format&fit=crop&w=720&q=85' },
+  { names: ['Orange'], url: 'https://images.unsplash.com/photo-1582979512210-99b6a53386f9?auto=format&fit=crop&w=720&q=85' },
+  { names: ['Grapes'], url: 'https://images.unsplash.com/photo-1537640538966-79f369143f8f?auto=format&fit=crop&w=720&q=85' },
+  { names: ['Muskmelon'], url: 'https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?auto=format&fit=crop&w=720&q=85' },
+  { names: ['Watermelon'], url: 'https://images.unsplash.com/photo-1563114773-84221bd62daa?auto=format&fit=crop&w=720&q=85' },
+  { names: ['Banana'], url: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=720&q=85' },
+  { names: ['Pappaya', 'Papaya'], url: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?auto=format&fit=crop&w=720&q=85' },
+  { names: ['Lemon', 'Lemon Juice'], url: 'https://images.unsplash.com/photo-1590502593747-42a996133562?auto=format&fit=crop&w=720&q=85' },
+  { names: ['Lime Mojito'], url: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=720&q=85' },
+  { names: ['Blue Monday'], url: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=720&q=85' },
+];
+
+function getBeverageImage(itemName: string) {
+  const normalizedItemName = normalizeFoodName(itemName);
+  return beverageImages.find(({ names }) => names.some((name) => normalizeFoodName(name) === normalizedItemName))?.url;
+}
+
 const fallbackEmoji: Record<Category, string> = {
   'Puffs & Bakery': '🥐',
   Breakfast: '🍽️',
@@ -619,7 +640,8 @@ function Home({ store, setStore, go }: { store: Store; setStore: (store: Store) 
 function FoodCard({ item, index, onAdd }: { item: MenuItem; index: number; onAdd: () => void }) {
   const [loaded, setLoaded] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
-  const image = getFoodImage(item.name);
+  const isBeverage = item.category === 'Fresh Juice & Mojito';
+  const image = isBeverage ? getBeverageImage(item.name) : getFoodImage(item.name);
   const gradient = fallbackGradients[
     (item.name.split('').reduce((sum, character) => sum + character.charCodeAt(0), index) % fallbackGradients.length)
   ];
@@ -645,7 +667,11 @@ function FoodCard({ item, index, onAdd }: { item: MenuItem; index: number; onAdd
             style={{ background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})` }}
             aria-label={`${item.name} food illustration`}
           >
-            <span className="text-5xl drop-shadow-md" aria-hidden="true">{fallbackEmoji[item.category]}</span>
+            {isBeverage ? (
+              <span className="px-4 text-center text-xs font-bold uppercase tracking-[.18em] text-white/90">{item.name}</span>
+            ) : (
+              <span className="text-5xl drop-shadow-md" aria-hidden="true">{fallbackEmoji[item.category]}</span>
+            )}
           </div>
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/45" />

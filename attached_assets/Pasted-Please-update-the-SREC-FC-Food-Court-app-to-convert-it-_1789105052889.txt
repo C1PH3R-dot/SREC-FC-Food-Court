@@ -1,0 +1,51 @@
+Please update the SREC FC Food Court app to convert it into a fully functional Progressive Web App (PWA) and completely remove all Replit badges, watermarks, and default metadata.
+
+Please implement the following technical steps:
+
+### 1. 🧼 REMOVE REPLIT BRANDING & OVERLAYS
+- Open `index.html`:
+  * Delete/remove any `<script src="https://replit.com/public/js/replit-badge.js"...>` or Replit badge tags if present.
+  * Update `<title>` to: `SREC FC Food Court`.
+  * Replace default favicons with `/favicon.ico` or `/favicon.svg` matching the campus food court theme.
+- In global CSS (`src/index.css` or `src/App.css`):
+  * Add the following CSS rule to force-hide any dynamically injected Replit badges or overlays:
+    `iframe[src*="replit"], #replit-badge, .replit-badge, a[href*="replit.com"] { display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }`
+
+### 2. 📦 PWA DEPENDENCIES & VITE CONFIG
+- Install `vite-plugin-pwa` as a dev dependency (`npm install -D vite-plugin-pwa`).
+- Update `vite.config.ts` (or `vite.config.js`) to import `VitePWA` from `vite-plugin-pwa` and add it to plugins.
+- Configure `VitePWA` with:
+  * `registerType: 'autoUpdate'`
+  * `includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png']`
+  * Web Manifest parameters:
+    - `name`: "SREC FC Food Court"
+    - `short_name`: "SREC FC"
+    - `description`: "Pre-order campus meals and bypass the queue at SREC FC counter."
+    - `theme_color`: "#064e3b"
+    - `background_color`: "#FDFBF7"
+    - `display`: "standalone"
+    - `start_url`: "/"
+    - `icons`:
+      - 192x192 PNG (`/pwa-192x192.png`)
+      - 512x512 PNG (`/pwa-512x512.png`)
+      - 512x512 Maskable PNG (`/maskable-512x512.png`)
+
+### 3. 📱 MOBILE META TAGS
+- Update `<head>` in `index.html` to include:
+  * `<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />`
+  * `<meta name="theme-color" content="#064e3b" />`
+  * `<meta name="apple-mobile-web-app-capable" content="yes" />`
+  * `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />`
+  * `<meta name="apple-mobile-web-app-title" content="SREC FC" />`
+  * `<link rel="apple-touch-icon" href="/apple-touch-icon.png" />`
+
+### 4. 📲 IN-APP INSTALL PROMPT BANNER
+- Add an install banner component (`InstallPwaBanner.tsx`):
+  * Capture the `beforeinstallprompt` browser event.
+  * Render a sleek green/cream bottom banner for mobile and desktop web users: "Install SREC FC App for faster ordering [Install]".
+  * Include a close/dismiss option.
+
+### 5. 🖼️ PUBLIC ASSETS GENERATION
+- Ensure clean placeholder PNG icons exist in the `/public` directory for `pwa-192x192.png`, `pwa-512x512.png`, and `apple-touch-icon.png`.
+
+Verify that `npm run build` completes successfully with zero service worker or TypeScript errors.
