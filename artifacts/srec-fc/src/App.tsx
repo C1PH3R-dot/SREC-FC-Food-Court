@@ -137,51 +137,78 @@ const menuSeed: MenuItem[] = [
   stock: !['Chicken Puff', 'Red Velvet', 'Blue Monday', 'Chicken Biriyani'].includes(name as string),
 }));
 
-const unsplash = (id: string) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=720&q=82`;
+const normalizeFoodName = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+const localFoodImages = [
+  { fileName: 'APPLE_CAKE.png', aliases: ['Apple Cake'] },
+  { fileName: 'CHAPPATHI.png', aliases: ['Chappathi'] },
+  { fileName: 'CHICKEN_NOODLES.png', aliases: ['Chicken Noodles'] },
+  { fileName: 'CHICKEN_PUFF.png', aliases: ['Chicken Puff'] },
+  { fileName: 'COCUNUT_BUN.png', aliases: ['Coconut Bun', 'Cocunut Bun'] },
+  { fileName: 'EGG_PUFF.png', aliases: ['Egg Puff'] },
+  { fileName: 'IDLI.png', aliases: ['Idly', 'Idli'] },
+  { fileName: 'MUSHROOM_PUFF.png', aliases: ['Mushroom Puff'] },
+  { fileName: 'PAROTTA.png', aliases: ['Parotta'] },
+  { fileName: 'PONGAL.png', aliases: ['Pongal'] },
+  { fileName: 'POORI.png', aliases: ['Poori'] },
+  { fileName: 'VEG_NOODLES.png', aliases: ['Veg Noodles'] },
+  { fileName: 'VEG_PUFF.png', aliases: ['Veg Puff'] },
+];
 
-const foodImages: Record<string, string> = {
-  'Veg Noodles': unsplash('photo-1569718212165-3a8278d5f624'),
-  'Egg Noodles': unsplash('photo-1569718212165-3a8278d5f624'),
-  'Chicken Noodles': unsplash('photo-1569718212165-3a8278d5f624'),
-  'Veg Rice': unsplash('photo-1512058564366-18510be2db19'),
-  'Egg Rice': unsplash('photo-1512058564366-18510be2db19'),
-  'Chicken Rice': unsplash('photo-1512058564366-18510be2db19'),
-  'Chicken Biriyani': unsplash('photo-1589302168068-964664d93dc0'),
-  'Egg Biriyani': unsplash('photo-1589302168068-964664d93dc0'),
-  'Bhel Poori': unsplash('photo-1601050690597-df0568f70950'),
-  'Masala Poori': unsplash('photo-1601050690597-df0568f70950'),
-  'Mushroom Chat': unsplash('photo-1512621776951-a57141f2eefd'),
-  'Pani Poori': unsplash('photo-1601050690597-df0568f70950'),
-  'Thattu Vada Set': unsplash('photo-1601050690597-df0568f70950'),
-  Vada: unsplash('photo-1601050690597-df0568f70950'),
-  Bajji: unsplash('photo-1601050690597-df0568f70950'),
-  Bonda: unsplash('photo-1601050690597-df0568f70950'),
-  Tea: unsplash('photo-1544787219-7f47ccb76574'),
-  Coffee: unsplash('photo-1495474472287-4d71bcdd2085'),
-  'Lemon Tea': unsplash('photo-1544787219-7f47ccb76574'),
-  Milk: unsplash('photo-1550583724-b2692b85b150'),
-  'Boost/Horlicks': unsplash('photo-1550583724-b2692b85b150'),
-  Vanilla: unsplash('photo-1501443762994-82bd5dace89a'),
-  Oreo: unsplash('photo-1579954115545-a95591f28bfc'),
-  'Banana Shake': unsplash('photo-1579954115545-a95591f28bfc'),
-  Strawberry: unsplash('photo-1579954115545-a95591f28bfc'),
-  'Red Velvet': unsplash('photo-1578985545062-69928b1d9587'),
-  Brownie: unsplash('photo-1606313564200-e75d5e30476c'),
-  Pomegranate: unsplash('photo-1490474418585-ba9bad8fd0ea'),
-  Apple: unsplash('photo-1490474418585-ba9bad8fd0ea'),
-  'Banana Juice': unsplash('photo-1490474418585-ba9bad8fd0ea'),
-  Mosambi: unsplash('photo-1546173159-315724a31696'),
-  Pineapple: unsplash('photo-1546549032-9571cd6b27df'),
-  Orange: unsplash('photo-1546173159-315724a31696'),
-  Grapes: unsplash('photo-1537640538966-79f369143f8f'),
-  Muskmelon: unsplash('photo-1546173159-315724a31696'),
-  Watermelon: unsplash('photo-1563114773-84221bd62daa'),
-  Pappaya: unsplash('photo-1528825871115-3581a5387919'),
-  Lemon: unsplash('photo-1519621667278-2f9f1ae9f2c7'),
-  'Lime Mojito': unsplash('photo-1513558161293-cdaf765ed2fd'),
-  'Blue Monday': unsplash('photo-1513558161293-cdaf765ed2fd'),
+function getFoodImage(itemName: string) {
+  const normalizedItemName = normalizeFoodName(itemName);
+  const match = localFoodImages.find(({ fileName, aliases }) =>
+    [fileName, ...aliases].some((value) => normalizeFoodName(value.replace(/\.[^.]+$/, '')) === normalizedItemName),
+  );
+  return match ? `/images/${match.fileName}` : undefined;
+}
+
+const fallbackEmoji: Record<Category, string> = {
+  'Puffs & Bakery': '🥐',
+  Breakfast: '🍽️',
+  Lunch: '🍛',
+  Indochines: '🍜',
+  Chats: '🥣',
+  Snacks: '🍟',
+  'Hot Drinks': '☕',
+  Milkshakes: '🥤',
+  'Fresh Juice & Mojito': '🍹',
 };
+const fallbackGradients = [
+  ['#2f6f57', '#9cbe8d'],
+  ['#b87942', '#f1d08a'],
+  ['#805b9c', '#e4b6ce'],
+  ['#2b6f88', '#8ed0cf'],
+  ['#a44f3f', '#efb080'],
+];
+const feedCategoryOrder: Category[] = [
+  'Puffs & Bakery',
+  'Fresh Juice & Mojito',
+  'Indochines',
+  'Chats',
+  'Breakfast',
+  'Lunch',
+  'Snacks',
+  'Hot Drinks',
+  'Milkshakes',
+];
+
+function diversifyMenu(items: MenuItem[]) {
+  const buckets = new Map<Category, MenuItem[]>();
+  feedCategoryOrder.forEach((category) => buckets.set(category, items.filter((item) => item.category === category)));
+  const result: MenuItem[] = [];
+  let added = true;
+  while (result.length < items.length && added) {
+    added = false;
+    feedCategoryOrder.forEach((category) => {
+      const bucket = buckets.get(category);
+      if (bucket?.length) {
+        result.push(bucket.shift()!);
+        added = true;
+      }
+    });
+  }
+  return result;
+}
 
 const categories = [
   'All',
@@ -195,7 +222,7 @@ const categories = [
   'Milkshakes',
   'Fresh Juice & Mojito',
 ];
-const authBackground = unsplash('photo-1504674900247-0877df9cc836');
+const authBackground = 'linear-gradient(135deg, #123b2b 0%, #1b5a3f 48%, #102c20 100%)';
 const defaultStore: Store = {
   signedIn: false,
   activeEmail: '',
@@ -352,7 +379,7 @@ function Auth({
 
   return (
     <main className="relative min-h-[100dvh] overflow-hidden bg-[#123b2b] text-[#fffaf0]">
-      <div className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-screen" style={{ backgroundImage: `url(${authBackground})` }} />
+      <div className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-screen" style={{ backgroundImage: authBackground }} />
       <div className="absolute inset-0 bg-[#123b2b]/85" />
       <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#eeb02f]/20 blur-3xl" />
       <div className="relative mx-auto flex min-h-[100dvh] max-w-md flex-col px-6 py-8">
@@ -545,9 +572,11 @@ function Header({ profile, go }: { profile: Profile; go: (path: string) => void 
 function Home({ store, setStore, go }: { store: Store; setStore: (store: Store) => void; go: (path: string) => void }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
+  const diversifiedMenu = useMemo(() => diversifyMenu(store.menu), [store.menu]);
   const items = useMemo(
-    () => store.menu.filter((item) => (category === 'All' || item.category === category) && item.name.toLowerCase().includes(query.toLowerCase())),
-    [store.menu, category, query],
+    () => (category === 'All' ? diversifiedMenu : store.menu)
+      .filter((item) => item.name.toLowerCase().includes(query.toLowerCase()) && (category === 'All' || item.category === category)),
+    [store.menu, diversifiedMenu, category, query],
   );
   const add = (item: MenuItem) => {
     const existing = store.cart.find((line) => line.itemId === item.id);
@@ -589,16 +618,39 @@ function Home({ store, setStore, go }: { store: Store; setStore: (store: Store) 
 
 function FoodCard({ item, index, onAdd }: { item: MenuItem; index: number; onAdd: () => void }) {
   const [loaded, setLoaded] = useState(false);
-  const image = item.name === 'Banana'
-    ? foodImages[item.category === 'Milkshakes' ? 'Banana Shake' : 'Banana Juice']
-    : foodImages[item.name];
+  const [imageFailed, setImageFailed] = useState(false);
+  const image = getFoodImage(item.name);
+  const gradient = fallbackGradients[
+    (item.name.split('').reduce((sum, character) => sum + character.charCodeAt(0), index) % fallbackGradients.length)
+  ];
+  const showImage = Boolean(image && !imageFailed);
   return (
     <article data-testid={`card-food-${item.id}`} className={`group relative overflow-hidden rounded-2xl border border-[#e1dcd0] bg-white shadow-[0_5px_12px_rgba(44,57,45,.04)] transition-all ${!item.stock ? 'opacity-65 grayscale-[.65]' : 'hover:-translate-y-0.5'}`}>
-      <div className="relative h-28 overflow-hidden rounded-t-2xl bg-[#e8eee5]">
-        {!loaded && <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-[#e5ede4] via-[#f7f4ea] to-[#e5ede4]" />}
-        <img src={image} alt={item.name} loading="lazy" onLoad={() => setLoaded(true)} className={`h-full w-full object-cover transition duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`} />
-        {!item.stock && <span className="absolute left-2 top-2 rounded-full bg-[#d94437] px-2 py-1 text-[9px] font-bold text-white">SOLD OUT</span>}
-        {item.stock && <span className="absolute left-2 top-2 rounded-full bg-[#e8f4e8]/90 px-2 py-1 text-[9px] font-bold text-[#267148] backdrop-blur-sm">IN STOCK</span>}
+      <div className="relative aspect-video overflow-hidden rounded-t-2xl bg-[#e8eee5]">
+        {showImage ? (
+          <>
+            {!loaded && <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-[#e5ede4] via-[#f7f4ea] to-[#e5ede4]" />}
+            <img
+              src={image}
+              alt={item.name}
+              loading="lazy"
+              onLoad={() => setLoaded(true)}
+              onError={() => setImageFailed(true)}
+              className={`h-full w-full object-cover object-center transition duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+            />
+          </>
+        ) : (
+          <div
+            className="flex h-full w-full items-center justify-center"
+            style={{ background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})` }}
+            aria-label={`${item.name} food illustration`}
+          >
+            <span className="text-5xl drop-shadow-md" aria-hidden="true">{fallbackEmoji[item.category]}</span>
+          </div>
+        )}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/45" />
+        {!item.stock && <span className="absolute left-2 top-2 z-10 rounded-full bg-[#d94437] px-2 py-1 text-[9px] font-bold text-white">SOLD OUT</span>}
+        {item.stock && <span className="absolute left-2 top-2 z-10 rounded-full bg-[#e8f4e8]/90 px-2 py-1 text-[9px] font-bold text-[#267148] backdrop-blur-sm">IN STOCK</span>}
       </div>
       <div className="p-3">
         <h4 data-testid={`text-food-name-${item.id}`} className="truncate text-sm font-bold text-[#1d3d2e]">{item.name}</h4>
