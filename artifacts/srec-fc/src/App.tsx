@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import JsBarcode from "jsbarcode";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { WalletProvider, useWallet } from "@/context/WalletContext";
@@ -399,6 +400,13 @@ const defaultStore: Store = {
 };
 const queryClient = new QueryClient();
 const money = (value: number) => `₹${value.toFixed(2)}`;
+const createTransactionId = () => {
+  const randomPart =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID().replaceAll("-", "").slice(0, 16)
+      : Math.random().toString(16).slice(2, 18);
+  return `${Date.now().toString(36).toUpperCase()}${randomPart.toUpperCase()}`;
+};
 
 const getCatalog = (): MenuItem[] => {
   try {
@@ -1595,7 +1603,7 @@ function Payment({
         hour: "2-digit",
         minute: "2-digit",
       }),
-      transaction: Math.random().toString(16).slice(2, 14),
+      transaction: createTransactionId(),
       payment:
         payment === "SREC Wallet" ? "Payment Method: SREC Wallet" : payment,
       items: store.cart,
@@ -1744,31 +1752,52 @@ function Payment({
   );
 }
 
-function Barcode({ value }: { value: string }) {
-  const bars = value.split("").flatMap((char) => {
-    const n = char.charCodeAt(0);
-    return [
-      1 + (n % 3),
-      1 + ((n >> 2) % 3),
-      1 + ((n >> 4) % 2),
-      1 + ((n >> 1) % 3),
-    ];
-  });
+function Barcode({ receipt, store }: { receipt: Receipt; store: Store }) {
+  const barcodeRef = useRef<SVGSVGElement>(null);
+  const lines = receipt.items
+    .map((line) => ({
+      ...line,
+      item: store.menu.find((item) => item.id === line.itemId),
+    }))
+    .filter((line) => line.item);
+  const payload = [
+    "SRECFC",
+    `RECEIPT=${receipt.id}`,
+    `TRANSACTION=${receipt.transaction}`,
+    "STATUS=PAID",
+    `PAYMENT=${receipt.payment.replaceAll("|", "/")}`,
+    `TOTAL=${receipt.total.toFixed(2)}`,
+    `ITEMS=${lines.map(({ item, qty }) => `${item!.name} x${qty}`).join(", ")}`,
+  ].join("|");
+
+  useEffect(() => {
+    if (!barcodeRef.current) return;
+    JsBarcode(barcodeRef.current, payload, {
+      format: "CODE128",
+      displayValue: false,
+      height: 56,
+      width: 1.4,
+      margin: 0,
+      background: "#ffffff",
+      lineColor: "#19231e",
+    });
+  }, [payload]);
+
   return (
     <div className="mx-auto mt-4 max-w-[240px]">
-      <div
+      <svg
+        ref={barcodeRef}
         data-testid="barcode-receipt"
-        className="flex h-14 items-stretch justify-center gap-[2px] overflow-hidden bg-white"
-      >
-        {bars.map((width, index) => (
-          <span
-            key={index}
-            className="bg-[#19231e]"
-            style={{ width: `${width}px` }}
-          />
-        ))}
-      </div>
-      <p className="mt-2 text-center text-xs tracking-[.18em]">{value}</p>
+        className="h-14 w-full bg-white"
+        role="img"
+        aria-label="Scannable receipt barcode containing order items and payment status"
+      />
+      <p className="mt-2 break-words text-center text-[9px] leading-4 tracking-[.08em]">
+        {receipt.transaction}
+      </p>
+      <p data-testid="barcode-payload" className="sr-only">
+        {payload}
+      </p>
     </div>
   );
 }
@@ -1875,7 +1904,7 @@ function ReceiptView({
             <p>— Thank you for dining with us! —</p>
             <p className="mt-2 font-bold tracking-[.18em]">SREC FC</p>
             <p className="text-[9px]">Good Food · Great Vibes</p>
-            <Barcode value={receipt.id} />
+            <Barcode receipt={receipt} store={store} />
             <div className="mt-5 flex items-center justify-center gap-2 text-[10px]">
               <span className="h-px w-16 bg-[#19231e]" />
               <Leaf size={16} />
@@ -2404,7 +2433,7 @@ function AppContent() {
   }, []);
   const setStore = (next: Store) => setStoreState(next);
   const go = (path: string) => setLocation(path);
-  const enterAccount = (account: Account) =>
+  const enterAccount = (account: Account) => {
     setStore({
       ...store,
       signedIn: true,
@@ -2419,7 +2448,9 @@ function AppContent() {
             : "STUDENT",
       },
     });
-  const registerAccount = (account: Account) =>
+    go("/");
+  };
+  const registerAccount = (account: Account) => {
     setStore({
       ...store,
       accounts: [...store.accounts, account],
@@ -2432,6 +2463,8 @@ function AppContent() {
         role: "STUDENT",
       },
     });
+    go("/");
+  };
   const resetPassword = (email: string, password: string) =>
     setStore({
       ...store,
