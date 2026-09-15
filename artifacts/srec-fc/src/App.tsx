@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { WalletProvider, useWallet } from '@/context/WalletContext';
+import { WalletTopUpModal } from '@/components/WalletTopUpModal';
+import { FrequentlyPairedTogether } from '@/components/FrequentlyPairedTogether';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import {
@@ -154,12 +157,53 @@ const localFoodImages = [
   { fileName: 'VEG_PUFF.png', aliases: ['Veg Puff'] },
 ];
 
+const remoteFoodImages: Record<string, string> = {
+  'Bonda': 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=1200&q=88',
+  'Bajji': 'https://images.unsplash.com/photo-1628294895950-9805252327bc?auto=format&fit=crop&w=1200&q=88',
+  'Vada': 'https://images.unsplash.com/photo-1601050690117-94f5f6fa8bd7?auto=format&fit=crop&w=1200&q=88',
+  'Bhel Poori': 'https://images.unsplash.com/photo-1601050690117-94f5f6fa8bd7?auto=format&fit=crop&w=1200&q=88',
+  'Masala Poori': 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=1200&q=88',
+  'Mushroom Chat': 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=1200&q=88',
+  'Pani Poori': 'https://images.unsplash.com/photo-1601050690117-94f5f6fa8bd7?auto=format&fit=crop&w=1200&q=88',
+  'Thattu Vada Set': 'https://images.unsplash.com/photo-1628294895950-9805252327bc?auto=format&fit=crop&w=1200&q=88',
+  'Choco Lava': 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1200&q=88',
+  'Honey Cake': 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1200&q=88',
+  'Tea Cake': 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1200&q=88',
+  'Pongal': 'https://images.unsplash.com/photo-1630383249896-424e482df921?auto=format&fit=crop&w=1200&q=88',
+  'Dosa': 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=1200&q=88',
+  'Roast': 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=1200&q=88',
+  'Poori': 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=1200&q=88',
+  'Parotta': 'https://images.unsplash.com/photo-1601050690117-94f5f6fa8bd7?auto=format&fit=crop&w=1200&q=88',
+  'Variety Rice': 'https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=1200&q=88',
+  'Meals': 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=1200&q=88',
+  'Kothu Parotta': 'https://images.unsplash.com/photo-1601050690117-94f5f6fa8bd7?auto=format&fit=crop&w=1200&q=88',
+  'Egg Noodles': 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=88',
+  'Veg Rice': 'https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=1200&q=88',
+  'Egg Rice': 'https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=1200&q=88',
+  'Chicken Rice': 'https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=1200&q=88',
+  'Chicken Biriyani': 'https://images.unsplash.com/photo-1563379091339-03246963d96c?auto=format&fit=crop&w=1200&q=88',
+  'Egg Biriyani': 'https://images.unsplash.com/photo-1563379091339-03246963d96c?auto=format&fit=crop&w=1200&q=88',
+  'Tea': 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=1200&q=88',
+  'Coffee': 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=88',
+  'Lemon Tea': 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=1200&q=88',
+  'Milk': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=1200&q=88',
+  'Boost/Horlicks': 'https://images.unsplash.com/photo-1572449043416-55f4685c9bb7?auto=format&fit=crop&w=1200&q=88',
+  'Vanilla': 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=1200&q=88',
+  'Oreo': 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=1200&q=88',
+  'Banana': 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=1200&q=88',
+  'Strawberry': 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=1200&q=88',
+  'Red Velvet': 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1200&q=88',
+  'Brownie': 'https://images.unsplash.com/photo-1564355808539-22fda35bed7e?auto=format&fit=crop&w=1200&q=88',
+};
+
+const defaultFoodPlaceholder = 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=82';
+
 function getFoodImage(itemName: string) {
   const normalizedItemName = normalizeFoodName(itemName);
   const match = localFoodImages.find(({ fileName, aliases }) =>
     [fileName, ...aliases].some((value) => normalizeFoodName(value.replace(/\.[^.]+$/, '')) === normalizedItemName),
   );
-  return match ? `/images/${match.fileName}` : undefined;
+  return match ? `/images/${match.fileName}` : remoteFoodImages[itemName] ?? defaultFoodPlaceholder;
 }
 
 const beverageImages = [
@@ -180,20 +224,8 @@ const beverageImages = [
 
 function getBeverageImage(itemName: string) {
   const normalizedItemName = normalizeFoodName(itemName);
-  return beverageImages.find(({ names }) => names.some((name) => normalizeFoodName(name) === normalizedItemName))?.url;
+  return beverageImages.find(({ names }) => names.some((name) => normalizeFoodName(name) === normalizedItemName))?.url ?? remoteFoodImages[itemName] ?? defaultFoodPlaceholder;
 }
-
-const fallbackEmoji: Record<Category, string> = {
-  'Puffs & Bakery': '🥐',
-  Breakfast: '🍽️',
-  Lunch: '🍛',
-  Indochines: '🍜',
-  Chats: '🥣',
-  Snacks: '🍟',
-  'Hot Drinks': '☕',
-  Milkshakes: '🥤',
-  'Fresh Juice & Mojito': '🍹',
-};
 const fallbackGradients = [
   ['#2f6f57', '#9cbe8d'],
   ['#b87942', '#f1d08a'],
@@ -574,7 +606,10 @@ function BottomNav({ path, cartCount, go }: { path: string; cartCount: number; g
 }
 
 function Header({ profile, go }: { profile: Profile; go: (path: string) => void }) {
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const { walletBalance } = useWallet();
   return (
+    <>
     <header className="flex items-center justify-between py-5">
       <div className="flex items-center gap-3">
         <Logo small />
@@ -583,10 +618,10 @@ function Header({ profile, go }: { profile: Profile; go: (path: string) => void 
           <h2 className="text-lg font-bold tracking-tight text-[#173d2d]">Good afternoon, {profile.name.split(' ')[0]}</h2>
         </div>
       </div>
-      <button data-testid="button-open-profile" onClick={() => go('/profile')} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#ddd8ca] bg-white text-[#1b4332]">
-        <CircleUserRound size={20} />
-      </button>
+      <div className="flex items-center gap-2"><button data-testid="button-open-wallet" onClick={() => setWalletModalOpen(true)} className="flex items-center gap-1 rounded-full border border-[#d8dfd3] bg-[#edf4eb] px-2.5 py-2 text-[10px] font-bold text-[#1b4332]">₹{walletBalance.toFixed(2)} <span className="text-[#2d6a4f]">+ Add</span></button><button data-testid="button-open-profile" onClick={() => go('/profile')} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#ddd8ca] bg-white text-[#1b4332]"><CircleUserRound size={20} /></button></div>
     </header>
+    <WalletTopUpModal open={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
+    </>
   );
 }
 
@@ -645,35 +680,18 @@ function FoodCard({ item, index, onAdd }: { item: MenuItem; index: number; onAdd
   const gradient = fallbackGradients[
     (item.name.split('').reduce((sum, character) => sum + character.charCodeAt(0), index) % fallbackGradients.length)
   ];
-  const showImage = Boolean(image && !imageFailed);
   return (
     <article data-testid={`card-food-${item.id}`} className={`group relative overflow-hidden rounded-2xl border border-[#e1dcd0] bg-white shadow-[0_5px_12px_rgba(44,57,45,.04)] transition-all ${!item.stock ? 'opacity-65 grayscale-[.65]' : 'hover:-translate-y-0.5'}`}>
       <div className="relative aspect-video overflow-hidden rounded-t-2xl bg-[#e8eee5]">
-        {showImage ? (
-          <>
-            {!loaded && <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-[#e5ede4] via-[#f7f4ea] to-[#e5ede4]" />}
-            <img
-              src={image}
-              alt={item.name}
-              loading="lazy"
-              onLoad={() => setLoaded(true)}
-              onError={() => setImageFailed(true)}
-              className={`h-full w-full object-cover object-center transition duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-            />
-          </>
-        ) : (
-          <div
-            className="flex h-full w-full items-center justify-center"
-            style={{ background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})` }}
-            aria-label={`${item.name} food illustration`}
-          >
-            {isBeverage ? (
-              <span className="px-4 text-center text-xs font-bold uppercase tracking-[.18em] text-white/90">{item.name}</span>
-            ) : (
-              <span className="text-5xl drop-shadow-md" aria-hidden="true">{fallbackEmoji[item.category]}</span>
-            )}
-          </div>
-        )}
+        {!loaded && <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-[#e5ede4] via-[#f7f4ea] to-[#e5ede4]" />}
+        <img
+          src={imageFailed ? defaultFoodPlaceholder : image}
+          alt={item.name}
+          loading="lazy"
+          onLoad={() => setLoaded(true)}
+          onError={() => setImageFailed(true)}
+          className={`h-full w-full object-cover object-center transition duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/45" />
         {!item.stock && <span className="absolute left-2 top-2 z-10 rounded-full bg-[#d94437] px-2 py-1 text-[9px] font-bold text-white">SOLD OUT</span>}
         {item.stock && <span className="absolute left-2 top-2 z-10 rounded-full bg-[#e8f4e8]/90 px-2 py-1 text-[9px] font-bold text-[#267148] backdrop-blur-sm">IN STOCK</span>}
@@ -694,15 +712,29 @@ function EmptyCart({ go }: { go: (path: string) => void }) {
   return <div className="flex min-h-[58vh] flex-col items-center justify-center text-center"><div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#e8efe7] text-[#2d6a4f]"><ShoppingCart size={31} strokeWidth={1.5} /></div><h2 className="mt-5 text-2xl font-bold text-[#173d2d]">Your tray is empty</h2><p className="mt-2 max-w-[250px] text-sm leading-5 text-[#7d877d]">The best lunch break starts with one good decision.</p><button data-testid="button-browse-menu" onClick={() => go('/')} className="mt-6 rounded-xl bg-[#1b4332] px-5 py-3 text-sm font-bold text-white">Browse the menu</button></div>;
 }
 
+function SmartBill({ store, setStore, go }: { store: Store; setStore: (store: Store) => void; go: (path: string) => void }) {
+  const lines = store.cart.map((line) => ({ ...line, item: store.menu.find((item) => item.id === line.itemId)! })).filter((line) => line.item);
+  const subtotal = lines.reduce((sum, line) => sum + line.item.price * line.qty, 0);
+  const gst = subtotal * .05;
+  const adjust = (id: string, amount: number) => setStore({ ...store, cart: store.cart.map((line) => line.itemId === id ? { ...line, qty: line.qty + amount } : line).filter((line) => line.qty > 0) });
+  const addPairing = (item: MenuItem) => {
+    const existing = store.cart.find((line) => line.itemId === item.id);
+    setStore({ ...store, cart: [...store.cart.filter((line) => line.itemId !== item.id), { itemId: item.id, qty: (existing?.qty || 0) + 1 }] });
+  };
+  return <div className="page-in pb-4"><div className="flex items-center gap-3 py-5"><button data-testid="button-back-menu" onClick={() => go('/')} className="rounded-full border border-[#ddd8ca] bg-white p-2"><ArrowLeft size={18} /></button><div><p className="text-xs uppercase tracking-[.2em] text-[#8a9087]">Ready when you are</p><h1 className="text-2xl font-bold text-[#173d2d]">Your order</h1></div></div><div className="rounded-3xl border border-[#e0dbcf] bg-white p-4 shadow-sm"><div className="flex items-center justify-between border-b border-dashed border-[#d8d2c4] pb-4"><div><p className="font-bold text-[#1b4332]">SREC FC counter</p><p className="mt-1 flex items-center gap-1 text-xs text-[#7f887f]"><Clock3 size={13} /> pickup in approx. 10–15 min</p></div><span className="rounded-full bg-[#e8efe7] px-2.5 py-1 text-[10px] font-bold text-[#2d6a4f]">PRE-ORDER</span></div><div className="divide-y divide-[#f0ece4]">{lines.map(({ item, qty }) => <div data-testid={`row-cart-${item.id}`} key={item.id} className="flex items-center justify-between gap-3 py-4"><div className="min-w-0"><p className="truncate text-sm font-bold text-[#233d30]">{item.name}</p><p className="mt-1 text-xs text-[#899088]">{money(item.price)} each</p></div><div className="flex items-center gap-3"><div className="flex items-center gap-2 rounded-xl bg-[#f1f4ee] p-1"><button data-testid={`button-minus-${item.id}`} onClick={() => adjust(item.id, -1)} className="rounded-lg p-1 text-[#1b4332]"><Minus size={14} /></button><span data-testid={`text-quantity-${item.id}`} className="w-4 text-center text-sm font-bold">{qty}</span><button data-testid={`button-plus-${item.id}`} onClick={() => adjust(item.id, 1)} className="rounded-lg p-1 text-[#1b4332]"><Plus size={14} /></button></div><span className="w-16 text-right font-mono text-sm font-bold text-[#1b4332]">{money(item.price * qty)}</span></div></div>)}</div></div><FrequentlyPairedTogether cartItems={lines.map(({ item }) => item)} catalog={store.menu} onAdd={(item) => addPairing(item as MenuItem)} getImage={(item) => item.category === 'Fresh Juice & Mojito' ? getBeverageImage(item.name) : getFoodImage(item.name)} /><div className="mt-5 rounded-3xl bg-[#1b4332] p-5 text-[#fffaf0]"><p className="text-xs font-semibold uppercase tracking-[.18em] text-[#b5c9b6]">Payment summary</p><div className="mt-4 space-y-3 text-sm"><div className="flex justify-between text-[#cddacc]"><span>Subtotal</span><span className="mono">{money(subtotal)}</span></div><div className="flex justify-between text-[#cddacc]"><span>GST (5%)</span><span className="mono">{money(gst)}</span></div><div className="mt-3 flex justify-between border-t border-white/15 pt-4 text-lg font-bold"><span>Total to pay</span><span className="mono text-[#eeb02f]">{money(subtotal + gst)}</span></div></div><button data-testid="button-proceed-payment" onClick={() => go('/payment')} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#eeb02f] py-3.5 font-bold text-[#173d2d]">Proceed to payment <ChevronRight size={17} /></button></div></div>;
+}
+
 function Bill({ store, setStore, go }: { store: Store; setStore: (store: Store) => void; go: (path: string) => void }) {
   const lines = store.cart.map((line) => ({ ...line, item: store.menu.find((item) => item.id === line.itemId)! })).filter((line) => line.item);
   const subtotal = lines.reduce((sum, line) => sum + line.item.price * line.qty, 0);
   const gst = subtotal * .05;
   const adjust = (id: string, amount: number) => setStore({ ...store, cart: store.cart.map((line) => line.itemId === id ? { ...line, qty: line.qty + amount } : line).filter((line) => line.qty > 0) });
+  return <SmartBill store={store} setStore={setStore} go={go} />;
   return <div className="page-in pb-4"><div className="flex items-center gap-3 py-5"><button data-testid="button-back-menu" onClick={() => go('/')} className="rounded-full border border-[#ddd8ca] bg-white p-2"><ArrowLeft size={18} /></button><div><p className="text-xs uppercase tracking-[.2em] text-[#8a9087]">Ready when you are</p><h1 className="text-2xl font-bold text-[#173d2d]">Your order</h1></div></div><div className="rounded-3xl border border-[#e0dbcf] bg-white p-4 shadow-sm"><div className="flex items-center justify-between border-b border-dashed border-[#d8d2c4] pb-4"><div><p className="font-bold text-[#1b4332]">SREC FC counter</p><p className="mt-1 flex items-center gap-1 text-xs text-[#7f887f]"><Clock3 size={13} /> pickup in approx. 10–15 min</p></div><span className="rounded-full bg-[#e8efe7] px-2.5 py-1 text-[10px] font-bold text-[#2d6a4f]">PRE-ORDER</span></div><div className="divide-y divide-[#f0ece4]">{lines.map(({ item, qty }) => <div data-testid={`row-cart-${item.id}`} key={item.id} className="flex items-center justify-between gap-3 py-4"><div className="min-w-0"><p className="truncate text-sm font-bold text-[#233d30]">{item.name}</p><p className="mt-1 text-xs text-[#899088]">{money(item.price)} each</p></div><div className="flex items-center gap-3"><div className="flex items-center gap-2 rounded-xl bg-[#f1f4ee] p-1"><button data-testid={`button-minus-${item.id}`} onClick={() => adjust(item.id, -1)} className="rounded-lg p-1 text-[#1b4332]"><Minus size={14} /></button><span data-testid={`text-quantity-${item.id}`} className="w-4 text-center text-sm font-bold">{qty}</span><button data-testid={`button-plus-${item.id}`} onClick={() => adjust(item.id, 1)} className="rounded-lg p-1 text-[#1b4332]"><Plus size={14} /></button></div><span className="w-16 text-right font-mono text-sm font-bold text-[#1b4332]">{money(item.price * qty)}</span></div></div>)}</div></div><div className="mt-5 rounded-3xl bg-[#1b4332] p-5 text-[#fffaf0]"><p className="text-xs font-semibold uppercase tracking-[.18em] text-[#b5c9b6]">Payment summary</p><div className="mt-4 space-y-3 text-sm"><div className="flex justify-between text-[#cddacc]"><span>Subtotal</span><span className="mono">{money(subtotal)}</span></div><div className="flex justify-between text-[#cddacc]"><span>GST (5%)</span><span className="mono">{money(gst)}</span></div><div className="mt-3 flex justify-between border-t border-white/15 pt-4 text-lg font-bold"><span>Total to pay</span><span className="mono text-[#eeb02f]">{money(subtotal + gst)}</span></div></div><button data-testid="button-proceed-payment" onClick={() => go('/payment')} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#eeb02f] py-3.5 font-bold text-[#173d2d]">Proceed to payment <ChevronRight size={17} /></button></div></div>;
 }
 
 const paymentApps = [
+  { name: 'SREC Wallet', logo: 'https://cdn.simpleicons.org/googlewallet/1b4332' },
   { name: 'Google Pay', logo: 'https://cdn.simpleicons.org/googlepay/5F6368' },
   { name: 'PhonePe', logo: 'https://cdn.simpleicons.org/phonepe/5F259F' },
   { name: 'Paytm', logo: 'https://cdn.simpleicons.org/paytm/00BAF2' },
@@ -711,17 +743,40 @@ const paymentApps = [
 function Payment({ store, onPaid, go }: { store: Store; onPaid: (receipt: Receipt) => void; go: (path: string) => void }) {
   const [app, setApp] = useState('Google Pay');
   const [processing, setProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const { walletBalance, payWithWallet } = useWallet();
+  const paymentMethod = app === 'SREC Wallet' ? 'wallet' : 'upi';
   const lines = store.cart.map((line) => ({ ...line, item: store.menu.find((item) => item.id === line.itemId)! })).filter((line) => line.item);
   const subtotal = lines.reduce((sum, line) => sum + line.item.price * line.qty, 0);
   const gst = subtotal * .05;
-  const pay = () => {
-    setProcessing(true);
-    setTimeout(() => {
-      const now = new Date();
-      const stamp = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
-      onPaid({ id: `FC${stamp}`, date: now.toLocaleDateString('en-GB').replaceAll('/', '-'), time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }), transaction: Math.random().toString(16).slice(2, 14), payment: app, items: store.cart, subtotal, gst, total: subtotal + gst });
-    }, 1500);
+  const total = subtotal + gst;
+  const buildReceipt = (payment: string): Receipt => {
+    const now = new Date();
+    const stamp = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+    return { id: `FC${stamp}`, date: now.toLocaleDateString('en-GB').replaceAll('/', '-'), time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }), transaction: Math.random().toString(16).slice(2, 14), payment: payment === 'SREC Wallet' ? 'Payment Method: SREC Wallet' : payment, items: store.cart, subtotal, gst, total };
   };
+  const pay = async () => {
+    setPaymentError('');
+    const receipt = buildReceipt(paymentMethod === 'wallet' ? 'SREC Wallet' : app);
+    if (paymentMethod === 'wallet' && walletBalance < total) {
+      setPaymentError(`Insufficient Wallet Balance. Please top up ${money(total - walletBalance)} or pay via UPI.`);
+      return;
+    }
+    setProcessing(true);
+    if (paymentMethod === 'wallet') {
+      try {
+        await payWithWallet(receipt.id, total);
+        onPaid(receipt);
+      } catch (error) {
+        setPaymentError(error instanceof Error ? error.message : 'Wallet payment failed.');
+        setProcessing(false);
+      }
+      return;
+    }
+    setTimeout(() => onPaid(receipt), 1500);
+  };
+  if (paymentError) return <div className="flex min-h-[75vh] flex-col justify-center page-in"><InlineAlert message={paymentError} /><button onClick={() => setWalletModalOpen(true)} className="mt-4 text-left text-sm font-bold text-[#2d6a4f] underline">Top Up Now</button><button onClick={() => setPaymentError('')} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1b4332] py-3.5 font-bold text-white">Back to payment <ArrowLeft size={17} /></button><WalletTopUpModal open={walletModalOpen} onClose={() => setWalletModalOpen(false)} /></div>;
   if (processing) return <div className="flex min-h-[75vh] flex-col items-center justify-center text-center page-in"><div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-[#e8efe7] text-[#1b4332]"><div className="absolute inset-0 animate-ping rounded-full border border-[#2d6a4f]/30" /><CreditCard size={34} /></div><h2 className="mt-8 text-2xl font-bold text-[#173d2d]">Confirming your payment</h2><p className="mt-2 text-sm text-[#7d877d]">Keep this screen open for a moment.</p><div className="mt-6 h-1.5 w-44 overflow-hidden rounded-full bg-[#dfe9df]"><div className="h-full w-2/3 animate-pulse rounded-full bg-[#eeb02f]" /></div></div>;
   return <div className="page-in"><div className="flex items-center gap-3 py-5"><button data-testid="button-back-cart" onClick={() => go('/cart')} className="rounded-full border border-[#ddd8ca] bg-white p-2"><ArrowLeft size={18} /></button><div><p className="text-xs uppercase tracking-[.2em] text-[#8a9087]">One last step</p><h1 className="text-2xl font-bold text-[#173d2d]">Pay & pick up</h1></div></div><div className="rounded-3xl bg-[#1b4332] p-6 text-[#fffaf0]"><p className="text-sm text-[#cddacc]">Amount payable</p><p data-testid="text-payment-total" className="mt-2 font-mono text-4xl font-bold text-[#eeb02f]">{money(subtotal + gst)}</p><p className="mt-2 flex items-center gap-1 text-xs text-[#b5c9b6]"><Zap size={13} /> Secure simulated UPI checkout</p></div><h3 className="mt-8 text-lg font-bold text-[#173d2d]">Choose your UPI app</h3><div className="mt-3 space-y-3">{paymentApps.map(({ name, logo: appLogo }) => <button data-testid={`button-upi-${name.toLowerCase().replaceAll(' ', '-')}`} key={name} onClick={() => setApp(name)} className={`flex w-full items-center justify-between rounded-2xl border p-4 text-left transition-all ${app === name ? 'border-[#1b4332] bg-[#edf4eb] shadow-sm' : 'border-[#ddd8ca] bg-white'}`}><div className="flex items-center gap-3"><span className="flex h-10 w-12 items-center justify-center rounded-xl bg-white p-2 shadow-sm"><img src={appLogo} alt={`${name} logo`} className="max-h-7 max-w-10 object-contain" /></span><span className="font-semibold text-[#294335]">{name}</span></div>{app === name && <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1b4332] text-white"><Check size={14} /></span>}</button>)}</div><button data-testid="button-pay-now" onClick={pay} className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-[#eeb02f] py-4 font-bold text-[#173d2d]">Pay {money(subtotal + gst)} securely <ChevronRight size={18} /></button><p className="mt-4 text-center text-[11px] text-[#8b9188]">Your receipt will be ready instantly after payment.</p></div>;
 }
@@ -763,7 +818,7 @@ function AppContent() {
   const shownReceipt = receipt || store.orders.find((order) => order.id === receiptId);
   const logout = () => { setStore({ ...store, signedIn: false, activeEmail: '', profile: { name: '', email: '', reminders: false }, cart: [] }); go('/'); };
   const path = location.startsWith('/receipt/') ? '/orders' : location;
-  return <div className="grain app-shell min-h-[100dvh]"><div className="mx-auto min-h-[100dvh] max-w-2xl px-4 pb-24 md:px-6">{shownReceipt && location.startsWith('/receipt/') ? <ReceiptView receipt={shownReceipt} store={store} go={go} /> : path === '/cart' ? <>{store.cart.length ? <Bill store={store} setStore={setStore} go={go} /> : <EmptyCart go={go} />}</> : path === '/payment' ? <Payment store={store} onPaid={(newReceipt) => { setStore({ ...store, cart: [], orders: [newReceipt, ...store.orders] }); setReceipt(newReceipt); go(`/receipt/${newReceipt.id}`); }} go={go} /> : path === '/orders' ? <Orders store={store} go={go} /> : path === '/profile' ? <Profile store={store} setStore={setStore} go={go} logout={logout} /> : <Home store={store} setStore={setStore} go={go} />}<BottomNav path={path} cartCount={store.cart.reduce((count, line) => count + line.qty, 0)} go={go} /></div></div>;
+  return <WalletProvider email={store.activeEmail}><div className="grain app-shell min-h-[100dvh]"><div className="mx-auto min-h-[100dvh] max-w-2xl px-4 pb-24 md:px-6">{shownReceipt && location.startsWith('/receipt/') ? <ReceiptView receipt={shownReceipt} store={store} go={go} /> : path === '/cart' ? <>{store.cart.length ? <Bill store={store} setStore={setStore} go={go} /> : <EmptyCart go={go} />}</> : path === '/payment' ? <Payment store={store} onPaid={(newReceipt) => { setStore({ ...store, cart: [], orders: [newReceipt, ...store.orders] }); setReceipt(newReceipt); go(`/receipt/${newReceipt.id}`); }} go={go} /> : path === '/orders' ? <Orders store={store} go={go} /> : path === '/profile' ? <Profile store={store} setStore={setStore} go={go} logout={logout} /> : <Home store={store} setStore={setStore} go={go} />}<BottomNav path={path} cartCount={store.cart.reduce((count, line) => count + line.qty, 0)} go={go} /></div></div></WalletProvider>;
 }
 
 function App() {

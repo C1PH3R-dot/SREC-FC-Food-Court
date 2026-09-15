@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: wallet
+    description: SREC Wallet operations
 paths:
   /healthz:
     get:
@@ -24,7 +26,74 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /wallet/balance:
+    get:
+      operationId: getWalletBalance
+      tags: [wallet]
+      summary: Get wallet balance and recent transactions
+      parameters:
+        - $ref: "#/components/parameters/UserEmail"
+      responses:
+        "200":
+          description: Wallet balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletBalance"
+  /wallet/topup:
+    post:
+      operationId: topUpWallet
+      tags: [wallet]
+      summary: Add funds to the wallet
+      parameters:
+        - $ref: "#/components/parameters/UserEmail"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletAmountRequest"
+      responses:
+        "200":
+          description: Updated wallet balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletBalanceResponse"
+  /wallet/pay:
+    post:
+      operationId: payWithWallet
+      tags: [wallet]
+      summary: Pay for an order from the wallet
+      parameters:
+        - $ref: "#/components/parameters/UserEmail"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletPaymentRequest"
+      responses:
+        "200":
+          description: Wallet payment accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletPaymentResponse"
+        "402":
+          description: Insufficient wallet balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
+  parameters:
+    UserEmail:
+      name: X-User-Email
+      in: header
+      required: true
+      schema:
+        type: string
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +102,49 @@ components:
           type: string
       required:
         - status
+    WalletTransaction:
+      type: object
+      properties:
+        id: { type: string }
+        amount: { type: number }
+        type: { type: string, enum: [TOPUP, PAYMENT] }
+        description: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, amount, type, description, createdAt]
+    WalletBalance:
+      type: object
+      properties:
+        balance: { type: number }
+        transactions:
+          type: array
+          items: { $ref: "#/components/schemas/WalletTransaction" }
+      required: [balance, transactions]
+    WalletBalanceResponse:
+      type: object
+      properties:
+        balance: { type: number }
+      required: [balance]
+    WalletAmountRequest:
+      type: object
+      properties:
+        amount: { type: number, exclusiveMinimum: 0 }
+      required: [amount]
+    WalletPaymentRequest:
+      type: object
+      properties:
+        orderId: { type: string }
+        amount: { type: number, exclusiveMinimum: 0 }
+      required: [orderId, amount]
+    WalletPaymentResponse:
+      type: object
+      properties:
+        balance: { type: number }
+        orderId: { type: string }
+        status: { type: string }
+      required: [balance, orderId, status]
+    ErrorResponse:
+      type: object
+      properties:
+        message: { type: string }
+      required: [message]
 

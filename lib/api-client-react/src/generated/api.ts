@@ -13,7 +13,14 @@ import type {
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  HealthStatus,
+  WalletAmountRequest,
+  WalletBalance,
+  WalletBalanceResponse,
+  WalletPaymentRequest,
+  WalletPaymentResponse,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
 import type { ErrorType } from "../custom-fetch";
@@ -99,3 +106,15 @@ export function useHealthCheck<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+export const getWalletBalance = async (options?: RequestInit): Promise<WalletBalance> => {
+  return customFetch<WalletBalance>(`/api/wallet/balance`, { ...options, method: "GET" });
+};
+
+export const topUpWallet = async (body: WalletAmountRequest, options?: RequestInit): Promise<WalletBalanceResponse> => {
+  return customFetch<WalletBalanceResponse>(`/api/wallet/topup`, { ...options, method: "POST", headers: { "Content-Type": "application/json", ...options?.headers }, body: JSON.stringify(body) });
+};
+
+export const payWithWallet = async (body: WalletPaymentRequest, options?: RequestInit): Promise<WalletPaymentResponse> => {
+  return customFetch<WalletPaymentResponse>(`/api/wallet/pay`, { ...options, method: "POST", headers: { "Content-Type": "application/json", ...options?.headers }, body: JSON.stringify(body) });
+};

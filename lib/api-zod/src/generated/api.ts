@@ -14,3 +14,21 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+export const WalletTransaction = zod.object({
+  id: zod.string(),
+  amount: zod.number(),
+  type: zod.enum(["TOPUP", "PAYMENT"]),
+  description: zod.string(),
+  createdAt: zod.string(),
+});
+
+export const WalletBalance = zod.object({
+  balance: zod.number(),
+  transactions: zod.array(WalletTransaction),
+});
+
+export const WalletBalanceResponse = zod.object({ balance: zod.number() });
+export const WalletAmountRequest = zod.object({ amount: zod.number().positive() });
+export const WalletPaymentRequest = zod.object({ orderId: zod.string(), amount: zod.number().positive() });
+export const WalletPaymentResponse = zod.object({ balance: zod.number(), orderId: zod.string(), status: zod.string() });

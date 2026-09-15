@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 
 import App from './App';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { InstallPWABanner } from '@/components/InstallPWABanner';
 
 import './index.css';
 
@@ -12,6 +13,17 @@ createRoot(document.getElementById('root')!, {
   },
 }).render(
   <ErrorBoundary>
-    <App />
+    <>
+      <App />
+      <InstallPWABanner />
+    </>
   </ErrorBoundary>,
 );
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch((error) => {
+      console.warn('SREC FC service worker registration failed.', error);
+    });
+  }, { once: true });
+}

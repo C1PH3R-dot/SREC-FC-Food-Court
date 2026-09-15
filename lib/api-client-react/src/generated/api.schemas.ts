@@ -8,3 +8,37 @@
 export interface HealthStatus {
   status: string;
 }
+
+export type WalletTransactionType = "TOPUP" | "PAYMENT";
+
+export interface WalletTransaction {
+  id: string;
+  amount: number;
+  type: WalletTransactionType;
+  description: string;
+  createdAt: string;
+}
+
+export interface WalletBalance {
+  balance: number;
+  transactions: WalletTransaction[];
+}
+
+export interface WalletBalanceResponse {
+  balance: number;
+}
+
+export interface WalletAmountRequest {
+  amount: number;
+}
+
+export interface WalletPaymentRequest {
+  orderId: string;
+  amount: number;
+}
+
+export interface WalletPaymentResponse {
+  balance: number;
+  orderId: string;
+  status: string;
+}
