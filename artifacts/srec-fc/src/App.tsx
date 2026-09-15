@@ -1761,7 +1761,11 @@ function Barcode({ value }: { value: string }) {
         className="flex h-14 items-stretch justify-center gap-[2px] overflow-hidden bg-white"
       >
         {bars.map((width, index) => (
-          <span className="bg-[#19231e]" style={{ width: `${width}px` }} />
+          <span
+            key={index}
+            className="bg-[#19231e]"
+            style={{ width: `${width}px` }}
+          />
         ))}
       </div>
       <p className="mt-2 text-center text-xs tracking-[.18em]">{value}</p>
