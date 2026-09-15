@@ -66,7 +66,7 @@ export function WalletTopUpModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#10291c]/65 p-3 backdrop-blur-sm md:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 backdrop-blur-sm md:items-center">
       <div className="w-full max-w-md rounded-3xl bg-[#fffdf8] p-5 text-[#173d2d] shadow-2xl">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">

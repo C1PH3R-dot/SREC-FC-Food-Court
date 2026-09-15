@@ -5,6 +5,7 @@ import { WalletProvider, useWallet } from "@/context/WalletContext";
 import { WalletTopUpModal } from "@/components/WalletTopUpModal";
 import { FrequentlyPairedTogether } from "@/components/FrequentlyPairedTogether";
 import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   ArrowLeft,
@@ -24,6 +25,7 @@ import {
   Plus,
   ReceiptText,
   ShieldCheck,
+  LifeBuoy,
   Search,
   ShoppingCart,
   UserRound,
@@ -439,6 +441,8 @@ const saveStore = (store: Store) =>
   localStorage.setItem("srec-fc-store", JSON.stringify(store));
 const saveCatalog = (menu: MenuItem[]) =>
   localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify(menu));
+const broadcastCatalogUpdate = () =>
+  window.dispatchEvent(new Event("catalog-update"));
 
 function Logo({ small = false }: { small?: boolean }) {
   return (
@@ -854,6 +858,89 @@ function BottomNav({
   );
 }
 
+function WalletDashboard({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [topUpOpen, setTopUpOpen] = useState(false);
+  const { walletBalance, transactions } = useWallet();
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 p-3 backdrop-blur-sm">
+      <section className="mx-auto min-h-[calc(100dvh-24px)] max-w-lg rounded-3xl bg-[#071c12] p-5 text-white shadow-2xl sm:my-6 sm:min-h-0">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[.2em] text-[#9bc5a3]">
+              SREC Wallet
+            </p>
+            <h2 className="mt-1 text-2xl font-bold">Your money, ready.</h2>
+          </div>
+          <button
+            aria-label="Close wallet dashboard"
+            onClick={onClose}
+            className="rounded-full bg-white/10 p-2 text-white"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="mt-8 rounded-3xl border border-white/10 bg-[#0d2d1c] p-5">
+          <p className="text-xs font-semibold tracking-[.2em] text-[#9bc5a3]">
+            YOUR BALANCE
+          </p>
+          <p className="mt-2 font-mono text-4xl font-bold text-[#eeb02f]">
+            ₹{walletBalance.toFixed(2)}
+          </p>
+          <button
+            onClick={() => setTopUpOpen(true)}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2d9b59] py-3.5 font-bold text-white"
+          >
+            <Plus size={18} /> Add Money
+          </button>
+        </div>
+        <div className="mt-7">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold">Transactions</h3>
+            <span className="text-xs text-[#9bc5a3]">Recent activity</span>
+          </div>
+          <div className="mt-3 space-y-2">
+            {transactions.length ? (
+              transactions.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-3"
+                >
+                  <div>
+                    <p className="text-sm font-semibold">
+                      {transaction.description}
+                    </p>
+                    <p className="mt-1 text-[11px] text-[#9bc5a3]">
+                      {new Date(transaction.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <span
+                    className={`font-mono text-sm font-bold ${transaction.type === "TOPUP" ? "text-[#70d890]" : "text-[#ff9b8f]"}`}
+                  >
+                    {transaction.type === "TOPUP" ? "+" : "-"}₹
+                    {transaction.amount.toFixed(2)}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="rounded-2xl border border-dashed border-white/15 p-5 text-center text-sm text-[#9bc5a3]">
+                No transactions yet.
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+      <WalletTopUpModal open={topUpOpen} onClose={() => setTopUpOpen(false)} />
+    </div>
+  );
+}
+
 function Header({
   profile,
   go,
@@ -863,23 +950,23 @@ function Header({
   go: (path: string) => void;
   isAdmin?: boolean;
 }) {
-  const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [walletDashboardOpen, setWalletDashboardOpen] = useState(false);
   const { walletBalance } = useWallet();
   return (
     <>
-      <header className="flex items-center justify-between py-5">
-        <div className="flex items-center gap-3">
+      <header className="flex w-full items-center justify-between gap-2 py-5">
+        <div className="flex min-w-0 items-center gap-3">
           <Logo small />
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[.22em] text-[#6c756b]">
               SREC Main FC
             </p>
-            <h2 className="text-lg font-bold tracking-tight text-[#173d2d]">
+            <h2 className="max-w-[120px] truncate text-lg font-bold tracking-tight text-[#173d2d] sm:max-w-none">
               Good afternoon, {profile.name.split(" ")[0]}
             </h2>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {isAdmin && (
             <button
               data-testid="button-open-admin"
@@ -891,10 +978,11 @@ function Header({
           )}
           <button
             data-testid="button-open-wallet"
-            onClick={() => setWalletModalOpen(true)}
+            onClick={() => setWalletDashboardOpen(true)}
             className="flex items-center gap-1.5 rounded-full border border-[#cfe0cc] bg-[#edf4eb] px-3 py-2 text-[11px] font-bold text-[#1b4332] shadow-sm"
           >
-            <WalletCards size={15} /> <span>₹{walletBalance.toFixed(2)}</span>
+            <span aria-hidden="true">👛</span>{" "}
+            <span>₹{walletBalance.toFixed(2)}</span>
             <span className="rounded-full bg-[#eeb02f] px-2 py-1 text-[10px] text-[#173d2d]">
               + Add
             </span>
@@ -908,9 +996,9 @@ function Header({
           </button>
         </div>
       </header>
-      <WalletTopUpModal
-        open={walletModalOpen}
-        onClose={() => setWalletModalOpen(false)}
+      <WalletDashboard
+        open={walletDashboardOpen}
+        onClose={() => setWalletDashboardOpen(false)}
       />
     </>
   );
@@ -1101,17 +1189,17 @@ function FoodCard({
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/45" />
         {!item.stock && (
-          <span className="absolute left-2 top-2 z-10 rounded-full bg-[#d94437] px-2 py-1 text-[9px] font-bold text-white">
+          <span className="absolute left-2 top-2 z-10 rounded-full bg-[#d94437] px-2 py-0.5 text-[10px] font-bold text-white sm:text-xs">
             SOLD OUT
           </span>
         )}
         {item.stock && (
-          <span className="absolute left-2 top-2 z-10 rounded-full bg-[#e8f4e8]/90 px-2 py-1 text-[9px] font-bold text-[#267148] backdrop-blur-sm">
+          <span className="absolute left-2 top-2 z-10 rounded-full bg-[#e8f4e8]/90 px-2 py-0.5 text-[10px] font-bold text-[#267148] backdrop-blur-sm sm:text-xs">
             IN STOCK
           </span>
         )}
       </div>
-      <div className="p-3">
+      <div className="flex min-h-[112px] flex-col p-3">
         <h4
           data-testid={`text-food-name-${item.id}`}
           className="truncate text-sm font-bold text-[#1d3d2e]"
@@ -1119,10 +1207,10 @@ function FoodCard({
           {item.name}
         </h4>
         <p className="mt-1 text-[11px] text-[#899088]">{item.category}</p>
-        <div className="mt-3 flex items-center justify-between">
+        <div className="mt-auto flex items-center justify-between gap-1 pt-3">
           <span
             data-testid={`text-food-price-${item.id}`}
-            className="font-mono text-sm font-bold text-[#1b4332]"
+            className="font-mono text-sm font-bold text-[#1b4332] sm:text-base"
           >
             {money(item.price)}
           </span>
@@ -1130,7 +1218,7 @@ function FoodCard({
             <button
               data-testid={`button-toggle-stock-${item.id}`}
               onClick={() => onToggleStock?.(item.id)}
-              className={`rounded-lg px-2 py-1.5 text-[10px] font-bold ${item.stock ? "bg-[#e8f4e8] text-[#267148]" : "bg-[#fff0ed] text-[#b13e32]"}`}
+              className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold sm:text-xs ${item.stock ? "bg-[#e8f4e8] text-[#267148]" : "bg-[#fff0ed] text-[#b13e32]"}`}
             >
               {item.stock ? "SOLD OUT" : "IN STOCK"}
             </button>
@@ -1139,7 +1227,7 @@ function FoodCard({
             data-testid={`button-add-${item.id}`}
             disabled={!item.stock}
             onClick={onAdd}
-            className={`rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wide ${item.stock ? "bg-[#eeb02f] text-[#173d2d]" : "cursor-not-allowed bg-[#e7e6df] text-[#a1a49e]"}`}
+            className={`shrink-0 rounded-lg px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide ${item.stock ? "bg-[#eeb02f] text-[#173d2d]" : "cursor-not-allowed bg-[#e7e6df] text-[#a1a49e]"}`}
           >
             {item.stock ? "+ Add" : "Unavailable"}
           </button>
@@ -1888,12 +1976,42 @@ function Profile({
   go: (path: string) => void;
   logout: () => void;
 }) {
+  const [supportType, setSupportType] = useState("Order issue");
+  const [supportMessage, setSupportMessage] = useState("");
+  const { toast } = useToast();
   const initials = store.profile.name
     .split(" ")
     .map((part) => part[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();
+  const submitSupportTicket = () => {
+    if (!supportMessage.trim()) return;
+    let existing: unknown = [];
+    try {
+      existing = JSON.parse(
+        localStorage.getItem("srec_support_tickets") || "[]",
+      );
+    } catch {
+      existing = [];
+    }
+    const ticket = {
+      id: `ticket-${Date.now()}`,
+      email: store.profile.email,
+      type: supportType,
+      message: supportMessage.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    localStorage.setItem(
+      "srec_support_tickets",
+      JSON.stringify([ticket, ...(Array.isArray(existing) ? existing : [])]),
+    );
+    setSupportMessage("");
+    toast({
+      title: "Report submitted",
+      description: "Thanks. The SREC FC team will review your issue.",
+    });
+  };
   return (
     <div className="page-in">
       <div className="py-5">
@@ -1966,6 +2084,42 @@ function Profile({
           </span>
         </button>
       </div>
+      <section className="mt-5 rounded-3xl border border-[#ded9cc] bg-white p-4">
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl bg-[#e8efe7] p-2.5 text-[#2d6a4f]">
+            <LifeBuoy size={18} />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-[#294335]">Help & Support</h2>
+            <p className="mt-1 text-xs text-[#899088]">
+              Report an order issue, payment discrepancy, or feedback.
+            </p>
+          </div>
+        </div>
+        <select
+          value={supportType}
+          onChange={(event) => setSupportType(event.target.value)}
+          className="mt-4 w-full rounded-xl border border-[#dcd8ce] bg-white px-3 py-3 text-sm text-[#294335] outline-none focus:border-[#2d6a4f]"
+        >
+          <option>Order issue</option>
+          <option>Payment discrepancy</option>
+          <option>General app feedback</option>
+        </select>
+        <textarea
+          value={supportMessage}
+          onChange={(event) => setSupportMessage(event.target.value)}
+          placeholder="Tell us what happened"
+          rows={3}
+          className="mt-3 w-full resize-none rounded-xl border border-[#dcd8ce] px-3 py-3 text-sm text-[#294335] outline-none focus:border-[#2d6a4f]"
+        />
+        <button
+          disabled={!supportMessage.trim()}
+          onClick={submitSupportTicket}
+          className="mt-3 flex items-center gap-2 rounded-xl bg-[#1b4332] px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Submit report <ChevronRight size={16} />
+        </button>
+      </section>
       <div className="mt-5 space-y-2">
         <button
           data-testid="button-order-history"
@@ -2230,8 +2384,23 @@ function AppContent() {
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   useEffect(() => {
     saveStore(store);
-    saveCatalog(store.menu);
   }, [store]);
+  useEffect(() => {
+    const refreshCatalog = () => {
+      const nextMenu = getCatalog();
+      setStoreState((current) =>
+        JSON.stringify(current.menu) === JSON.stringify(nextMenu)
+          ? current
+          : { ...current, menu: nextMenu },
+      );
+    };
+    window.addEventListener("catalog-update", refreshCatalog);
+    window.addEventListener("storage", refreshCatalog);
+    return () => {
+      window.removeEventListener("catalog-update", refreshCatalog);
+      window.removeEventListener("storage", refreshCatalog);
+    };
+  }, []);
   const setStore = (next: Store) => setStoreState(next);
   const go = (path: string) => setLocation(path);
   const enterAccount = (account: Account) =>
@@ -2273,7 +2442,10 @@ function AppContent() {
     store.profile.role === "ADMIN" && store.activeEmail === ADMIN_EMAIL;
   const updateCatalog = (mutator: (menu: MenuItem[]) => MenuItem[]) => {
     if (!isAdmin) return;
-    setStore({ ...store, menu: mutator(store.menu) });
+    const nextMenu = mutator(store.menu);
+    saveCatalog(nextMenu);
+    broadcastCatalogUpdate();
+    setStore({ ...store, menu: nextMenu });
   };
   const addMenuItem = (item: Omit<MenuItem, "id">) =>
     updateCatalog((menu) => [

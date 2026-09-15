@@ -27,18 +27,18 @@ type WalletContextValue = {
 
 const WalletContext = createContext<WalletContextValue | null>(null);
 
-const LOCAL_BALANCE_KEY = "srec_wallet_balance";
-const LOCAL_TRANSACTIONS_KEY = "srec_wallet_transactions";
+const getWalletKey = (email: string, suffix: string) =>
+  `srec_wallet_${suffix}_${email || "guest"}`;
 
-function readLocalBalance() {
-  const value = Number(localStorage.getItem(LOCAL_BALANCE_KEY));
+function readLocalBalance(email: string) {
+  const value = Number(localStorage.getItem(getWalletKey(email, "balance")));
   return Number.isFinite(value) && value >= 0 ? value : 0;
 }
 
-function readLocalTransactions(): WalletTransaction[] {
+function readLocalTransactions(email: string): WalletTransaction[] {
   try {
     const value = JSON.parse(
-      localStorage.getItem(LOCAL_TRANSACTIONS_KEY) || "[]",
+      localStorage.getItem(getWalletKey(email, "transactions")) || "[]",
     );
     return Array.isArray(value) ? value : [];
   } catch {
@@ -46,29 +46,37 @@ function readLocalTransactions(): WalletTransaction[] {
   }
 }
 
-function writeLocalWallet(balance: number, transaction?: WalletTransaction) {
-  localStorage.setItem(LOCAL_BALANCE_KEY, balance.toFixed(2));
+function writeLocalWallet(
+  email: string,
+  balance: number,
+  transaction?: WalletTransaction,
+) {
+  localStorage.setItem(getWalletKey(email, "balance"), balance.toFixed(2));
   if (transaction)
     localStorage.setItem(
-      LOCAL_TRANSACTIONS_KEY,
-      JSON.stringify([transaction, ...readLocalTransactions()].slice(0, 20)),
+      getWalletKey(email, "transactions"),
+      JSON.stringify(
+        [transaction, ...readLocalTransactions(email)].slice(0, 20),
+      ),
     );
 }
 
 function localWalletUpdate(
+  email: string,
   amount: number,
   type: WalletTransaction["type"],
   description: string,
 ) {
-  const balance = readLocalBalance() + amount;
+  const balance = readLocalBalance(email) + amount;
   if (balance < 0) throw new Error("Insufficient wallet balance.");
-  writeLocalWallet(balance, {
+  writeLocalWallet(email, balance, {
     id: `local-${Date.now()}`,
     amount: Math.abs(amount),
     type,
     description,
     createdAt: new Date().toISOString(),
   });
+  window.dispatchEvent(new CustomEvent("wallet-update", { detail: { email } }));
   return balance;
 }
 
@@ -118,8 +126,8 @@ export function WalletProvider({
       setTransactions(data.transactions);
       setError("");
     } catch {
-      setWalletBalance(readLocalBalance());
-      setTransactions(readLocalTransactions());
+      setWalletBalance(readLocalBalance(email));
+      setTransactions(readLocalTransactions(email));
       setError("");
     } finally {
       setIsLoading(false);
@@ -128,6 +136,19 @@ export function WalletProvider({
 
   useEffect(() => {
     void refreshWallet();
+  }, [email]);
+
+  useEffect(() => {
+    const handleWalletUpdate = (event: Event) => {
+      const detail = (event as CustomEvent<{ email?: string }>).detail;
+      if (!detail?.email || detail.email === email) void refreshWallet();
+    };
+    window.addEventListener("wallet-update", handleWalletUpdate);
+    window.addEventListener("storage", handleWalletUpdate);
+    return () => {
+      window.removeEventListener("wallet-update", handleWalletUpdate);
+      window.removeEventListener("storage", handleWalletUpdate);
+    };
   }, [email]);
 
   const topUpWallet = async (amount: number) => {
@@ -144,12 +165,13 @@ export function WalletProvider({
         return data.balance;
       } catch {
         const balance = localWalletUpdate(
+          email,
           amount,
           "TOPUP",
           "SREC Wallet top-up",
         );
         setWalletBalance(balance);
-        setTransactions(readLocalTransactions());
+        setTransactions(readLocalTransactions(email));
         setError("");
         return balance;
       }
@@ -177,12 +199,13 @@ export function WalletProvider({
         )
           throw requestError;
         const balance = localWalletUpdate(
+          email,
           -amount,
           "PAYMENT",
           `Wallet payment for order ${orderId}`,
         );
         setWalletBalance(balance);
-        setTransactions(readLocalTransactions());
+        setTransactions(readLocalTransactions(email));
         setError("");
         return balance;
       }
