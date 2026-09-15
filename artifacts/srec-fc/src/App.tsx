@@ -29,7 +29,7 @@ import {
   Search,
   ShoppingCart,
   UserRound,
-  WalletCards,
+  Wallet,
   X,
   Zap,
   Trash2,
@@ -869,8 +869,8 @@ function WalletDashboard({
   const { walletBalance, transactions } = useWallet();
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 p-3 backdrop-blur-sm">
-      <section className="mx-auto min-h-[calc(100dvh-24px)] max-w-lg rounded-3xl bg-[#071c12] p-5 text-white shadow-2xl sm:my-6 sm:min-h-0">
+    <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/60 p-3">
+      <section className="relative z-[101] mx-auto min-h-[calc(100dvh-24px)] max-w-lg rounded-3xl bg-[#071c12] p-5 text-white shadow-2xl sm:my-6 sm:min-h-0">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-[.2em] text-[#9bc5a3]">
@@ -951,18 +951,17 @@ function Header({
   isAdmin?: boolean;
 }) {
   const [walletDashboardOpen, setWalletDashboardOpen] = useState(false);
-  const { walletBalance } = useWallet();
   return (
     <>
       <header className="flex w-full items-center justify-between gap-2 py-5">
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex-1 min-w-0 pr-2 flex items-center gap-3">
           <Logo small />
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[.22em] text-[#6c756b]">
               SREC Main FC
             </p>
-            <h2 className="max-w-[120px] truncate text-lg font-bold tracking-tight text-[#173d2d] sm:max-w-none">
-              Good afternoon, {profile.name.split(" ")[0]}
+            <h2 className="truncate font-semibold text-slate-800">
+              Good afternoon, {profile.name}
             </h2>
           </div>
         </div>
@@ -971,21 +970,19 @@ function Header({
             <button
               data-testid="button-open-admin"
               onClick={() => go("/admin")}
-              className="flex items-center gap-1 rounded-full border border-[#d8dfd3] bg-white px-2.5 py-2 text-[10px] font-bold text-[#1b4332]"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d8dfd3] bg-white text-[#1b4332] sm:h-auto sm:w-auto sm:gap-1 sm:px-2.5 sm:py-2 sm:text-[10px] sm:font-bold"
             >
-              <ShieldCheck size={14} /> Admin Portal
+              <ShieldCheck size={16} />
+              <span className="hidden sm:inline">Admin Portal</span>
             </button>
           )}
           <button
             data-testid="button-open-wallet"
             onClick={() => setWalletDashboardOpen(true)}
-            className="flex items-center gap-1.5 rounded-full border border-[#cfe0cc] bg-[#edf4eb] px-3 py-2 text-[11px] font-bold text-[#1b4332] shadow-sm"
+            aria-label="Open SREC Wallet"
+            className="rounded-full bg-emerald-50 p-2.5 text-emerald-800 hover:bg-emerald-100"
           >
-            <span aria-hidden="true">👛</span>{" "}
-            <span>₹{walletBalance.toFixed(2)}</span>
-            <span className="rounded-full bg-[#eeb02f] px-2 py-1 text-[10px] text-[#173d2d]">
-              + Add
-            </span>
+            <Wallet className="h-5 w-5" />
           </button>
           <button
             data-testid="button-open-profile"
@@ -1207,7 +1204,7 @@ function FoodCard({
           {item.name}
         </h4>
         <p className="mt-1 text-[11px] text-[#899088]">{item.category}</p>
-        <div className="mt-auto flex items-center justify-between gap-1 pt-3">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-1 pt-3">
           <span
             data-testid={`text-food-price-${item.id}`}
             className="font-mono text-sm font-bold text-[#1b4332] sm:text-base"

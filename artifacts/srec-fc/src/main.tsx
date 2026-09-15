@@ -20,7 +20,7 @@ createRoot(document.getElementById('root')!, {
   </ErrorBoundary>,
 );
 
-if ('serviceWorker' in navigator) {
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch((error) => {
       console.warn('SREC FC service worker registration failed.', error);
