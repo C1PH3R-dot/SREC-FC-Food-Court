@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 import JsBarcode from "jsbarcode";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -961,7 +968,7 @@ function Header({
   const [walletDashboardOpen, setWalletDashboardOpen] = useState(false);
   return (
     <>
-      <header className="flex w-full items-center justify-between gap-2 py-5">
+      <header className="relative z-30 flex w-full items-center justify-between gap-2 py-5">
         <div className="flex-1 min-w-0 pr-2 flex items-center gap-3">
           <Logo small />
           <div>
@@ -1014,13 +1021,11 @@ function Home({
   setStore,
   go,
   isAdmin = false,
-  onToggleStock,
 }: {
   store: Store;
   setStore: (store: Store) => void;
   go: (path: string) => void;
   isAdmin?: boolean;
-  onToggleStock?: (itemId: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
@@ -1049,9 +1054,9 @@ function Home({
   };
 
   return (
-    <div className="page-in">
+    <div className="page-in pb-24">
       <Header profile={store.profile} go={go} isAdmin={isAdmin} />
-      <section className="relative overflow-hidden rounded-[26px] bg-[#1b4332] p-5 text-[#fffaf0] shadow-[0_16px_28px_rgba(27,67,50,.18)]">
+      <section className="relative mt-4 overflow-hidden rounded-[26px] bg-[#1b4332] p-5 pt-2 text-[#fffaf0] shadow-[0_16px_28px_rgba(27,67,50,.18)]">
         <div className="absolute -right-5 -top-8 text-[#eeb02f]/20">
           <Leaf size={150} strokeWidth={0.7} />
         </div>
@@ -1121,8 +1126,6 @@ function Home({
             item={item}
             index={index}
             onAdd={() => add(item)}
-            isAdmin={isAdmin}
-            onToggleStock={onToggleStock}
           />
         ))}
       </div>
@@ -1153,14 +1156,10 @@ function FoodCard({
   item,
   index,
   onAdd,
-  isAdmin = false,
-  onToggleStock,
 }: {
   item: MenuItem;
   index: number;
   onAdd: () => void;
-  isAdmin?: boolean;
-  onToggleStock?: (itemId: string) => void;
 }) {
   const [loaded, setLoaded] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
@@ -1212,30 +1211,26 @@ function FoodCard({
           {item.name}
         </h4>
         <p className="mt-1 text-[11px] text-[#899088]">{item.category}</p>
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-1 pt-3">
+        <div className="mt-auto flex min-w-0 items-center justify-between gap-1 pt-3">
           <span
             data-testid={`text-food-price-${item.id}`}
-            className="font-mono text-sm font-bold text-[#1b4332] sm:text-base"
+            className="min-w-0 truncate font-mono text-sm font-bold text-[#1b4332] sm:text-base"
           >
             {money(item.price)}
           </span>
-          {isAdmin && (
+          {item.stock ? (
             <button
-              data-testid={`button-toggle-stock-${item.id}`}
-              onClick={() => onToggleStock?.(item.id)}
-              className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold sm:text-xs ${item.stock ? "bg-[#e8f4e8] text-[#267148]" : "bg-[#fff0ed] text-[#b13e32]"}`}
+              data-testid={`button-add-${item.id}`}
+              onClick={onAdd}
+              className="shrink-0 rounded-lg bg-[#eeb02f] px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide text-[#173d2d]"
             >
-              {item.stock ? "SOLD OUT" : "IN STOCK"}
+              + Add
             </button>
+          ) : (
+            <span className="shrink-0 cursor-not-allowed rounded-lg bg-[#e7e6df] px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide text-[#a1a49e]">
+              SOLD OUT
+            </span>
           )}
-          <button
-            data-testid={`button-add-${item.id}`}
-            disabled={!item.stock}
-            onClick={onAdd}
-            className={`shrink-0 rounded-lg px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide ${item.stock ? "bg-[#eeb02f] text-[#173d2d]" : "cursor-not-allowed bg-[#e7e6df] text-[#a1a49e]"}`}
-          >
-            {item.stock ? "+ Add" : "Unavailable"}
-          </button>
         </div>
       </div>
     </article>
@@ -2213,6 +2208,18 @@ function AdminPanel({
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result === "string")
+        setForm((current) => ({ ...current, image: result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const startEdit = (item: MenuItem) => {
     setEditingId(item.id);
     setForm({
@@ -2244,7 +2251,7 @@ function AdminPanel({
   };
 
   return (
-    <div className="page-in pb-8">
+    <div className="page-in pb-24">
       <div className="flex items-center justify-between py-5">
         <div className="flex items-center gap-3">
           <button
@@ -2312,25 +2319,32 @@ function AdminPanel({
               <option key={category}>{category}</option>
             ))}
           </select>
-          <input
-            value={form.image}
-            onChange={(event) =>
-              setForm({ ...form, image: event.target.value })
-            }
-            placeholder="Image URL (optional)"
-            type="url"
-            className="rounded-xl border border-[#dcd8ce] px-3 py-3 text-sm outline-none focus:border-[#2d6a4f]"
-          />
+          <label className="flex cursor-pointer items-center rounded-xl border border-dashed border-[#dcd8ce] px-3 py-3 text-sm font-semibold text-[#294335] outline-none hover:border-[#2d6a4f]">
+            <span>Upload image</span>
+            <input
+              key={form.image ? "image-selected" : "image-empty"}
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="sr-only"
+            />
+          </label>
         </div>
         {form.image && (
-          <img
-            src={form.image}
-            alt="Menu item preview"
-            className="mt-3 h-28 w-full rounded-xl object-cover object-center"
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
-            }}
-          />
+          <div className="mt-3 flex items-center gap-3 rounded-xl border border-[#ded9cc] p-2">
+            <img
+              src={form.image}
+              alt="Menu item preview"
+              className="h-16 w-20 rounded-lg object-cover object-center"
+            />
+            <button
+              type="button"
+              onClick={() => setForm((current) => ({ ...current, image: "" }))}
+              className="rounded-lg border border-[#f0d7d1] px-3 py-2 text-xs font-bold text-[#b13e32]"
+            >
+              Remove Image
+            </button>
+          </div>
         )}
         <label className="mt-3 flex items-center gap-2 text-sm font-semibold text-[#294335]">
           <input
@@ -2578,7 +2592,6 @@ function AppContent() {
               setStore={setStore}
               go={go}
               isAdmin={isAdmin}
-              onToggleStock={isAdmin ? toggleStock : undefined}
             />
           )}
           <BottomNav

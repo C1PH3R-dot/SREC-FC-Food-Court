@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useWallet } from "@/context/WalletContext";
 
 const quickAmounts = [50, 100, 200, 500];
-const paymentOptions = ["Pay via GPay", "Pay via Paytm", "UPI ID / Netbanking"];
+const paymentOptions = ["GPay", "PhonePe", "Paytm", "UPI ID"];
 
 export function WalletTopUpModal({
   open,
@@ -15,14 +15,16 @@ export function WalletTopUpModal({
 }) {
   const [amount, setAmount] = useState("100");
   const [submitting, setSubmitting] = useState(false);
-  const [step, setStep] = useState<"amount" | "payment" | "success">("amount");
+  const [step, setStep] = useState<"balance" | "amount" | "payment">("balance");
   const [paymentOption, setPaymentOption] = useState(paymentOptions[0]);
-  const { topUpWallet } = useWallet();
+  const { walletBalance, transactions, topUpWallet } = useWallet();
   const { toast } = useToast();
 
   useEffect(() => {
     if (open) {
-      setStep("amount");
+      setStep("balance");
+      setAmount("100");
+      setPaymentOption(paymentOptions[0]);
       setSubmitting(false);
     }
   }, [open]);
@@ -48,11 +50,11 @@ export function WalletTopUpModal({
     try {
       await new Promise((resolve) => window.setTimeout(resolve, 1500));
       await topUpWallet(parsedAmount);
-      setStep("success");
       toast({
         title: "Wallet topped up",
         description: `₹${parsedAmount.toFixed(2)} was added to your SREC Wallet.`,
       });
+      onClose();
     } catch (error) {
       toast({
         title: "Top-up failed",
@@ -66,8 +68,8 @@ export function WalletTopUpModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
-      <div className="relative z-[101] w-full max-w-sm rounded-2xl bg-slate-900 p-6 text-white shadow-2xl">
+    <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+      <div className="bg-slate-900 text-white w-full max-w-sm rounded-2xl p-6 shadow-2xl relative z-[101]">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="rounded-2xl bg-[#e8efe7] p-3 text-[#1b4332]">
@@ -78,10 +80,10 @@ export function WalletTopUpModal({
                 SREC Wallet
               </p>
               <h2 className="mt-1 text-2xl font-bold">
-                {step === "payment"
-                  ? "Choose payment"
-                  : step === "success"
-                    ? "Funds added"
+                {step === "balance"
+                  ? "Your wallet"
+                  : step === "payment"
+                    ? "Choose payment"
                     : "Add funds"}
               </h2>
             </div>
@@ -94,6 +96,54 @@ export function WalletTopUpModal({
             <X size={17} />
           </button>
         </div>
+        {step === "balance" && (
+          <>
+            <div className="mt-6 rounded-2xl bg-white/10 p-4">
+              <p className="text-sm text-slate-300">Current balance</p>
+              <p className="mt-1 font-mono text-3xl font-bold text-[#eeb02f]">
+                ₹{walletBalance.toFixed(2)}
+              </p>
+            </div>
+            <button
+              onClick={() => setStep("amount")}
+              className="mt-5 w-full rounded-xl bg-[#eeb02f] py-3.5 font-bold text-[#173d2d]"
+            >
+              Top Up Wallet
+            </button>
+            <div className="mt-6">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">Recent transactions</h3>
+                <span className="text-xs text-slate-400">Latest 3</span>
+              </div>
+              <div className="mt-3 space-y-2">
+                {transactions.slice(0, 3).length ? (
+                  transactions.slice(0, 3).map((transaction) => (
+                    <div
+                      key={transaction.id}
+                      className="flex items-center justify-between rounded-xl bg-white/10 p-3"
+                    >
+                      <div className="min-w-0 pr-3">
+                        <p className="truncate text-sm font-semibold">
+                          {transaction.description}
+                        </p>
+                        <p className="mt-1 text-[11px] text-slate-400">
+                          {new Date(transaction.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className="shrink-0 font-mono text-sm font-bold text-[#70d890]">
+                        +₹{transaction.amount.toFixed(2)}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="rounded-xl border border-dashed border-white/15 p-4 text-center text-sm text-slate-400">
+                    No transactions yet.
+                  </p>
+                )}
+              </div>
+            </div>
+          </>
+        )}
         {step === "amount" && (
           <>
             <div className="mt-6 grid grid-cols-4 gap-2">
@@ -157,28 +207,11 @@ export function WalletTopUpModal({
                 </>
               ) : (
                 <>
-                  Proceed to Pay <CreditCard size={17} />
+                  Pay Now <CreditCard size={17} />
                 </>
               )}
             </button>
           </>
-        )}
-        {step === "success" && (
-          <div className="mt-7 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#d9f0df] text-[#267148]">
-              <Check size={32} />
-            </div>
-            <h3 className="mt-4 text-xl font-bold">Payment successful</h3>
-            <p className="mt-2 text-sm text-[#6f796f]">
-              ₹{Number(amount).toFixed(2)} added via {paymentOption}.
-            </p>
-            <button
-              onClick={onClose}
-              className="mt-6 w-full rounded-xl bg-[#1b4332] py-3.5 font-bold text-white"
-            >
-              Done
-            </button>
-          </div>
         )}
       </div>
     </div>
